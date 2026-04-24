@@ -1,65 +1,101 @@
-import Image from "next/image";
+"use client";
+
+import { useRef, useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { CardConfig } from "@/types/card";
+import { Editor } from "@/components/Editor";
+import { CardPreview } from "@/components/CardPreview";
+
+const DEFAULT_CONFIG: CardConfig = {
+  platform: "twitter",
+  milestone: "1,000",
+  unit: "followers",
+  handle: "@yourhandle",
+  message: "Thank you all so much 🙏",
+  logoUrl: undefined,
+
+  theme: "dark",
+  aspectRatio: "1:1",
+  textAlign: "left",
+
+  backgroundMode: "solid",
+  backgroundValue: "#0a0a0a",
+  noiseOpacity: 0,
+
+  milestoneStyle: { family: "Inter", weight: 900, size: 96, spacing: -2, uppercase: false },
+  unitStyle: { family: "Inter", weight: 400, size: 20, spacing: 2, uppercase: true },
+  messageStyle: { family: "Inter", weight: 300, size: 13, spacing: 0, uppercase: false },
+};
 
 export default function Home() {
+  const [config, setConfig] = useState<CardConfig>(DEFAULT_CONFIG);
+  const [downloading, setDownloading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = useCallback(async () => {
+    if (!cardRef.current) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 1200 / cardRef.current.offsetWidth,
+        useCORS: true,
+        backgroundColor: null,
+        width: cardRef.current.offsetWidth,
+        height: cardRef.current.offsetHeight,
+      });
+      const link = document.createElement("a");
+      link.download = `milestone-${config.platform}-${config.milestone.replace(/,/g, "")}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      console.error("Export failed:", err);
+    } finally {
+      setDownloading(false);
+    }
+  }, [config]);
+
+  const handleReset = useCallback(() => setConfig(DEFAULT_CONFIG), []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-[#050505] text-white">
+      {/* NAV */}
+      <nav className="h-14 px-6 border-b border-white/[0.08] flex items-center justify-between sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-sm">
+        <div className="uppercase tracking-[0.3em] text-[10px] font-bold text-zinc-400">
+          Milestone Studio
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleReset}
+            variant="ghost"
+            className="text-zinc-500 hover:text-white hover:bg-white/5 text-xs font-semibold h-9 px-4 rounded-lg border border-white/[0.08]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Reset
+          </Button>
+          <Button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="bg-white text-black hover:bg-zinc-200 text-xs font-semibold h-9 px-5 rounded-lg"
           >
-            Documentation
-          </a>
+            {downloading ? "Exporting..." : "Export PNG"}
+          </Button>
         </div>
-      </main>
-    </div>
+      </nav>
+
+      <div className="flex min-h-[calc(100vh-56px)]">
+        {/* SIDEBAR */}
+        <aside className="w-full lg:w-[380px] lg:min-w-[380px] lg:h-[calc(100vh-56px)] lg:sticky lg:top-14 border-r border-white/[0.08] bg-[#0a0a0a] overflow-y-auto">
+          <div className="p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-zinc-800 hover:scrollbar-thumb-zinc-700">
+            <Editor config={config} onChange={setConfig} />
+          </div>
+        </aside>
+
+        {/* PREVIEW */}
+        <section className="flex-1 flex items-center justify-center p-8 lg:p-12 bg-pattern">
+          <CardPreview ref={cardRef} config={config} />
+        </section>
+      </div>
+    </main>
   );
 }
+
