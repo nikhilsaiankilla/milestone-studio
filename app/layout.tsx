@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Roboto } from "next/font/google";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -86,17 +87,24 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`min-h-full bg-background text-foreground font-sans antialiased overflow-hidden ${roboto.variable}`}
+      suppressHydrationWarning
+      className={roboto.variable}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-screen w-full bg-background text-foreground font-sans antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-        </ThemeProvider></body>
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full">
+              <SidebarTrigger className="fixed top-4 left-4 z-50" />
+              {children}
+            </div>
+          </SidebarProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

@@ -214,38 +214,44 @@
     box-shadow: 0 0 20px 2px rgba(255, 255, 255, 0.02),
       inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
   }
-
-  /* DARK THEME PATTERN */
-  .bg-pattern {
-    --s: 48px;
-    --p1: color-mix(in oklab, var(--background) 84%, white);
-    --p2: color-mix(in oklab, var(--background) 92%, white);
-
-    --_g: #0000 83%, var(--p1) 85% 99%, #0000 101%;
-
-    background:
-      radial-gradient(27% 29% at right, var(--_g)) calc(var(--s) / 2) var(--s),
-      radial-gradient(27% 29% at left, var(--_g)) calc(var(--s) / -2) var(--s),
-      radial-gradient(29% 27% at top, var(--_g)) 0 calc(var(--s) / 2),
-      radial-gradient(29% 27% at bottom, var(--_g)) 0 calc(var(--s) / -2) var(--p2);
-
-    background-size: calc(2 * var(--s)) calc(2 * var(--s));
-  }
-
-  /* LIGHT THEME PATTERN */
-  .bg-pattern-light {
-    --s: 48px;
-    --p1: color-mix(in oklab, var(--background) 92%, var(--foreground));
-    --p2: color-mix(in oklab, var(--background) 96%, var(--foreground));
-
-    --_g: #0000 83%, var(--p1) 85% 99%, #0000 101%;
-
-    background:
-      radial-gradient(27% 29% at right, var(--_g)) calc(var(--s) / 2) var(--s),
-      radial-gradient(27% 29% at left, var(--_g)) calc(var(--s) / -2) var(--s),
-      radial-gradient(29% 27% at top, var(--_g)) 0 calc(var(--s) / 2),
-      radial-gradient(29% 27% at bottom, var(--_g)) 0 calc(var(--s) / -2) var(--p2);
-
-    background-size: calc(2 * var(--s)) calc(2 * var(--s));
-  }
 }
+
+
+/* Here are ideas ranked by impact:
+🔥 High Impact
+
+Animated preview — subtle floating/pulse animation on the milestone number while editing (not exported, just feels alive)
+Copy to clipboard — one-click copy the card as image (no download needed, paste straight to Twitter)
+Multi-line milestone — e.g. "10K → 20K" progress style cards, not just single numbers
+Confetti burst on export button click — tiny delight moment
+Undo/Redo — Cmd+Z support, huge QoL for tweaking
+
+✨ Design & Visual
+
+Pattern backgrounds — dots, grid, diagonal lines, halftone, noise mesh (SVG-based, no external deps)
+Border/stroke on card — colored border around the card itself (glow effect option too)
+Text shadow controls — custom shadow color + blur per text field
+Emoji picker for the message field — inline emoji support
+Icon pack — instead of platform images, pick from a set of icons (crown, star, fire, rocket, etc.)
+
+📐 Layout
+
+Multiple layout modes — "Centered Stack", "Split Left/Right", "Minimal (number only)", "Badge style" — totally different card structures vs just alignment tweaks
+Custom font upload — let user paste a Google Fonts URL or upload a .ttf
+Second line of milestone — e.g. subtitle under the number like "in 90 days" or "MRR"
+
+🛠 Utility
+
+History/saved cards — save multiple card configs to localStorage, switch between them
+Share link — encode config as URL params so you can share a card design with anyone
+Export as SVG — cleaner than canvas for text-heavy cards
+Batch export — generate multiple aspect ratios at once (1:1 + 9:16 + 4:5) in a zip
+Watermark toggle — optional "Made with Milestone Studio" badge
+
+📊 Social-specific
+
+Story mode — 9:16 with animated elements (progress bar, countdown ticker)
+Before/After card — "500 → 10,000 followers" split design
+MRR/revenue card — preset for SaaS founders with $ prefix, formatted numbers
+
+Which direction excites you most? I can build any of these out right now. */

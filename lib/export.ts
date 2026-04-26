@@ -32,8 +32,7 @@ export async function downloadCardAsPng(
   link.click();
 }
 
-// ─── Drawing ─────────────────────────────────────────────────────────────────
-
+// Drawing
 async function drawCard(
   ctx: CanvasRenderingContext2D,
   config: CardConfig,
@@ -116,3 +115,4 @@ function buildFileName(config: CardConfig): string {
   const slug = config.milestone.replace(/[^a-zA-Z0-9]/g, "");
   return `milestone-${config.platform}-${slug}.png`;
 }
+  
