@@ -20,7 +20,7 @@ export function ThemeSwitch() {
             variant="outline"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-full"
+            className="rounded-full cursor-pointer"
         >
             {theme === "dark" ? (
                 <Sun className="h-4 w-4" />

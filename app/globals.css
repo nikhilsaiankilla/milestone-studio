@@ -7,9 +7,6 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -104,11 +101,6 @@
   --sidebar-ring: oklch(0.72 0.19 52);
 }
 
-
-/* =====================================================
-   DARK MODE — ORANGE PRIMARY
-===================================================== */
-
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -171,12 +163,6 @@
     @apply bg-background text-foreground;
   }
 
-  html {
-    @apply font-sans;
-    /* Smooth behavior for high-end feel */
-    scroll-behavior: smooth;
-  }
-
   /* Webkit Scrollbar Styling (Chrome, Safari, Edge) */
   ::-webkit-scrollbar {
     width: 6px;
@@ -215,43 +201,3 @@
       inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
   }
 }
-
-
-/* Here are ideas ranked by impact:
-🔥 High Impact
-
-Animated preview — subtle floating/pulse animation on the milestone number while editing (not exported, just feels alive)
-Copy to clipboard — one-click copy the card as image (no download needed, paste straight to Twitter)
-Multi-line milestone — e.g. "10K → 20K" progress style cards, not just single numbers
-Confetti burst on export button click — tiny delight moment
-Undo/Redo — Cmd+Z support, huge QoL for tweaking
-
-✨ Design & Visual
-
-Pattern backgrounds — dots, grid, diagonal lines, halftone, noise mesh (SVG-based, no external deps)
-Border/stroke on card — colored border around the card itself (glow effect option too)
-Text shadow controls — custom shadow color + blur per text field
-Emoji picker for the message field — inline emoji support
-Icon pack — instead of platform images, pick from a set of icons (crown, star, fire, rocket, etc.)
-
-📐 Layout
-
-Multiple layout modes — "Centered Stack", "Split Left/Right", "Minimal (number only)", "Badge style" — totally different card structures vs just alignment tweaks
-Custom font upload — let user paste a Google Fonts URL or upload a .ttf
-Second line of milestone — e.g. subtitle under the number like "in 90 days" or "MRR"
-
-🛠 Utility
-
-History/saved cards — save multiple card configs to localStorage, switch between them
-Share link — encode config as URL params so you can share a card design with anyone
-Export as SVG — cleaner than canvas for text-heavy cards
-Batch export — generate multiple aspect ratios at once (1:1 + 9:16 + 4:5) in a zip
-Watermark toggle — optional "Made with Milestone Studio" badge
-
-📊 Social-specific
-
-Story mode — 9:16 with animated elements (progress bar, countdown ticker)
-Before/After card — "500 → 10,000 followers" split design
-MRR/revenue card — preset for SaaS founders with $ prefix, formatted numbers
-
-Which direction excites you most? I can build any of these out right now. */

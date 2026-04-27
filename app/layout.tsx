@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Inter, Roboto } from "next/font/google";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Analytics } from "@vercel/analytics/next"
 
 const roboto = Roboto({
@@ -102,13 +101,8 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-              <SidebarTrigger className="fixed top-4 left-4 z-50" />
-              {children}
-              <Analytics />
-            </div>
-          </SidebarProvider>
+          {children}
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
