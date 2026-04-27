@@ -6,6 +6,7 @@ import { CardPreview } from "@/components/CardPreview";
 import Image from "next/image";
 import LeftSidebarEditor from "@/components/left-sidebar-editor";
 import RightSidebarEditor from "@/components/right-sidebar-editor";
+import Link from "next/link";
 
 const DEFAULT_CONFIG: CardConfig = {
   platform: "twitter",
@@ -42,9 +43,10 @@ export default function Home() {
     setActiveTemplateId(tpl.id);
   }, []);
 
-  /* ── Export ── */
+  /* ── Export (High Quality) ── */
   const handleDownload = useCallback(async () => {
     const el = cardRef.current;
+
     if (!el) {
       alert("Card not ready — please wait and try again.");
       return;
@@ -53,34 +55,35 @@ export default function Home() {
     setDownloading(true);
 
     try {
-      const html2canvas = (await import("html2canvas")).default;
+      const { toPng } = await import("html-to-image");
 
-      // Wait a tick to ensure any pending paints flush
-      await new Promise(r => setTimeout(r, 120));
+      // Wait for paint + fonts
+      await new Promise((r) => setTimeout(r, 150));
+      await document.fonts.ready;
 
-      const canvas = await html2canvas(el, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: null,
-        logging: false,
-        imageTimeout: 20000,
-        onclone: (doc) => {
-          // Ensure cloned element has explicit px dimensions
-          const cloned = doc.querySelector('[data-card-root]') as HTMLElement;
-          if (cloned) {
-            const rect = el.getBoundingClientRect();
-            cloned.style.width = `${rect.width}px`;
-            cloned.style.height = `${rect.height}px`;
-          }
+      const rect = el.getBoundingClientRect();
+
+      const dataUrl = await toPng(el, {
+        cacheBust: true,
+
+        // Main quality control
+        pixelRatio: 5, // use 4–6 for crisp exports
+
+        // Force exact export dimensions
+        canvasWidth: rect.width * 5,
+        canvasHeight: rect.height * 5,
+        width: rect.width,
+        height: rect.height,
+
+        style: {
+          margin: "0",
+          transform: "scale(1)",
+          transformOrigin: "top left",
         },
       });
 
-      const dataUrl = canvas.toDataURL("image/png", 1.0);
-
-      // Programmatic download — works cross-browser
       const link = document.createElement("a");
-      link.download = "milestone-card.png";
+      link.download = "milestone-card-hq.png";
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -88,7 +91,7 @@ export default function Home() {
 
     } catch (err) {
       console.error("Export failed:", err);
-      alert("Export failed. Try right-clicking the card and saving the image.");
+      alert("Export failed. Please try again.");
     } finally {
       setDownloading(false);
     }
@@ -129,7 +132,29 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <Link
+              href="https://github.com/nikhilsaiankilla/millestone-studio"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="w-6 h-6 fill-current"
+              >
+                <path d="M12 2c5.5228 0 10 4.47715 10 10 0 4.5716 -3.0686 8.4239 -7.2578 9.6162v-3.0117c0 -0.7275 -0.1595 -1.4465 -0.4678 -2.1055 2.1883 -0.7822 4.2783 -2.4447 4.2783 -4.4355 0 -1.2663 -0.4671 -2.75174 -1.5127 -3.63186V6l-2.9462 0.98828c-0.6589 -0.16036 -1.3628 -0.24706 -2.0938 -0.24707 -0.731 0 -1.4349 0.08673 -2.09375 0.24707L6.95996 6v2.43164c-1.04555 0.88009 -1.51163 2.36566 -1.51172 3.63186 0 1.9907 2.08913 3.6533 4.27735 4.4355 -0.26358 0.5635 -0.41862 1.1711 -0.45801 1.7901 -0.13854 0.0283 -0.25191 0.0415 -0.34473 0.04 -0.20756 -0.0033 -0.36606 -0.06 -0.51953 -0.1562 -1.11532 -0.7 -1.54401 -1.9835 -3.05566 -2.1543 -0.19076 -0.0214 -0.3474 0.1371 -0.34766 0.3291 0 0.1922 0.15921 0.3423 0.34473 0.3925 1.44216 0.39 1.42755 3.2266 3.54785 3.2598 0.11976 0.0019 0.24101 -0.0069 0.36426 -0.0186v1.6348C5.06807 20.4236 2 16.5713 2 12 2 6.47715 6.47715 2 12 2" />
+              </svg>
+            </Link>
+            <Link href="https://x.com/itzznikhilsai" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white/70 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" className="bi bi-twitter-x" viewBox="0 0 16 16" id="Twitter-X--Streamline-Bootstrap" height="16" width="16">
+                <desc>
+                  Twitter X Streamline Icon: https://streamlinehq.com
+                </desc>
+                <path d="M12.6 0.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867 -5.07 -4.425 5.07H0.316l5.733 -6.57L0 0.75h5.063l3.495 4.633L12.601 0.75Zm-0.86 13.028h1.36L4.323 2.145H2.865z" stroke-width="1"></path>
+              </svg>
+            </Link>
             <button
               onClick={handleReset}
               className="h-9 px-4 rounded-xl text-[11px] font-medium text-white/40 border border-white/[0.07] hover:text-white/70 hover:border-white/15 transition-all tracking-wide cursor-pointer"

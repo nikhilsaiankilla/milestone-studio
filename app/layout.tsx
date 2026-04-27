@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import { Roboto } from "next/font/google";
+import { Inter, Roboto } from "next/font/google";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 const roboto = Roboto({
   variable: "--font-roboto",
   subsets: ["latin"],
 });
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+})
 
 export const metadata: Metadata = {
   title: "Milestone Studio | Create Beautiful Milestone Cards for Social Media",
@@ -88,9 +93,8 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={roboto.variable}
     >
-      <body className="min-h-screen w-full bg-background text-foreground font-sans antialiased">
+      <body className={`min-h-screen w-full bg-background text-foreground font-sans antialiased ${roboto.variable} ${inter.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
