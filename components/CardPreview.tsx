@@ -19,6 +19,8 @@ export function fmtNum(val: string, auto: boolean, prefix = ""): string {
 
 export const CardPreview = forwardRef<HTMLDivElement, { config: CardConfig }>(
     function CardPreview({ config: cfg }, ref) {
+        const [imgFailed, setImgFailed] = useState(false)
+        
         const light = isLight(cfg.backgroundValue);
         const auto = {
             pri: light ? "#111" : "#fff",
@@ -73,19 +75,32 @@ export const CardPreview = forwardRef<HTMLDivElement, { config: CardConfig }>(
             <div
                 ref={ref}
                 style={{
-                    width: "100%",
-                    maxWidth: 460,
-                    aspectRatio: ratio.css,
-                    transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)"
+                    width: "420px",
+                    maxWidth: "90vw",
+                    flexShrink: 0,
+                    aspectRatio:
+                        cfg.aspectRatio === "1:1"
+                            ? "1 / 1"
+                            : cfg.aspectRatio === "4:5"
+                                ? "4 / 5"
+                                : "3 / 2",
+                    transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
+                    margin: "0 auto",
                 }}
             >
                 <div
                     style={{
-                        width: "100%", height: "100%", position: "relative", overflow: "hidden",
-                        display: "flex", flexDirection: "column", justifyContent: "space-between",
-                        padding: "8%", boxSizing: "border-box",
+                        width: "100%",
+                        height: "100%",
+                        position: "relative",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        padding: "8%",
+                        boxSizing: "border-box",
                         background: cfg.backgroundValue,
-                        borderRadius,
+                        borderRadius: cfg.cardBorderRadius ?? 16,
                     }}
                 >
                     {/* Overlay */}
@@ -165,7 +180,13 @@ export const CardPreview = forwardRef<HTMLDivElement, { config: CardConfig }>(
 
                             {/* Handle bottom-left */}
                             {cfg.handle && (
-                                <div style={{ position: "absolute", bottom: 0, left: 0, fontSize: gs.size, color: "rgba(255,255,255,0.25)" }}>
+                                <div style={{
+                                    position: "absolute",
+                                    bottom: 0,
+                                    left: 0,
+                                    fontSize: gs.size,
+                                    color: "rgba(255,255,255,0.25)"
+                                }}>
                                     {cfg.handle.startsWith("@") ? cfg.handle : "@" + cfg.handle}
                                 </div>
                             )}
@@ -177,14 +198,49 @@ export const CardPreview = forwardRef<HTMLDivElement, { config: CardConfig }>(
                             {/* TOP: platform badge */}
                             {cfg.showPlatformBadge ? (
                                 <div style={{ position: "relative", zIndex: 10 }}>
-                                    {platform.image ? (
-                                        <img src={platform.image} alt="" style={{ width: 28, height: 28, objectFit: "contain", borderRadius: 4, opacity: 0.9, marginBottom: 6 }} />
+                                    {platform.image && !imgFailed ? (
+                                        <img
+                                            src={platform.image}
+                                            alt={platform.label}
+                                            onError={() => setImgFailed(true)}
+                                            style={{
+                                                width: 28,
+                                                height: 28,
+                                                objectFit: "contain",
+                                                borderRadius: 4,
+                                                opacity: 0.9,
+                                                marginBottom: 6,
+                                                display: "block",
+                                            }}
+                                        />
                                     ) : (
-                                        <div style={{ fontSize: 18, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>{platform.glyph}</div>
+                                        <div
+                                            style={{
+                                                fontSize: 18,
+                                                fontWeight: 700,
+                                                color: "rgba(255,255,255,0.7)",
+                                                marginBottom: 4,
+                                                lineHeight: 1,
+                                            }}
+                                        >
+                                            {platform.glyph}
+                                        </div>
                                     )}
-                                    <div style={{ fontSize: 7, textTransform: "uppercase", letterSpacing: "0.28em", color: "rgba(255,255,255,0.55)" }}>{platform.label}</div>
+
+                                    <div
+                                        style={{
+                                            fontSize: 7,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.28em",
+                                            color: "rgba(255,255,255,0.55)",
+                                        }}
+                                    >
+                                        {platform.label}
+                                    </div>
                                 </div>
-                            ) : <div />}
+                            ) : (
+                                <div />
+                            )}
 
                             {/* CENTER: count */}
                             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 10 }}>

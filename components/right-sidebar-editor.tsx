@@ -2,56 +2,80 @@
 
 import { useCallback, useState } from "react"
 import { Sidebar, SidebarContent } from "./ui/sidebar"
-import { CATEGORIES, TEMPLATES, TextAlign, CardConfig, PLATFORMS, Platform } from "@/types/card"
+import { CATEGORIES, TEMPLATES, TemplateDef, CardConfig, PLATFORMS, Platform } from "@/types/card"
 import { isLight, fmtNum } from "@/app/page"
+import Product from "./product"
 
 type Props = {
     config: CardConfig
     onChange: (config: CardConfig) => void
+    onTemplateChange: (tpl: TemplateDef) => void
+    activeTemplateId: string
 }
 
-const RightSidebarEditor = ({ config, onChange }: Props) => {
+const RightSidebarEditor = ({ config, onChange, onTemplateChange, activeTemplateId }: Props) => {
     const [category, setCategory] = useState("All")
-    const [activeTpl, setActiveTpl] = useState("x-slot-machine")
 
-    const applyTemplate = useCallback((tpl: any) => {
-        setActiveTpl(tpl.id)
+    const applyTemplate = useCallback((tpl: TemplateDef) => {
         const c = tpl.cfg
+
+        // Apply all template cfg fields on top of current config,
+        // then seed each dynamic field's default value so inputs aren't blank
+        const fieldDefaults: Partial<CardConfig> = {}
+        for (const field of tpl.fields) {
+            const currentVal = config[field.key]
+            // Only seed if the current config doesn't already have a value for this field
+            // or if it's still using another template's value
+            if (currentVal === undefined || currentVal === null || currentVal === '') {
+                if (field.defaultValue !== undefined) {
+                    (fieldDefaults as any)[field.key] = field.defaultValue
+                }
+            }
+        }
+
         onChange({
             ...config,
-            ...(c.platform && { platform: c.platform }),
-            ...(c.backgroundValue && { backgroundValue: c.backgroundValue }),
+            // Spread all cfg fields from template
+            ...(c.platform !== undefined && { platform: c.platform }),
+            ...(c.backgroundValue !== undefined && { backgroundValue: c.backgroundValue }),
             ...(c.noiseOpacity !== undefined && { noiseOpacity: c.noiseOpacity }),
             ...(c.showDivider !== undefined && { showDivider: c.showDivider }),
             ...(c.showPlatformBadge !== undefined && { showPlatformBadge: c.showPlatformBadge }),
-            ...(c.showBadge !== undefined && { showPlatformBadge: c.showBadge }),
             ...(c.cardBorderRadius !== undefined && { cardBorderRadius: c.cardBorderRadius }),
-            ...(c.radius !== undefined && { cardBorderRadius: c.radius }),
-            ...(c.cardMode && { cardMode: c.cardMode }),
-            ...(c.aspectRatio && { aspectRatio: c.aspectRatio }),
-            ...(c.accentColor && { accentColor: c.accentColor }),
+            ...(c.cardMode !== undefined && { cardMode: c.cardMode }),
+            ...(c.aspectRatio !== undefined && { aspectRatio: c.aspectRatio }),
+            ...(c.accentColor !== undefined && { accentColor: c.accentColor }),
             ...(c.storyProgress !== undefined && { storyProgress: c.storyProgress }),
-            ...(c.currencyPrefix && { currencyPrefix: c.currencyPrefix }),
+            ...(c.currencyPrefix !== undefined && { currencyPrefix: c.currencyPrefix }),
             ...(c.autoFormatNumber !== undefined && { autoFormatNumber: c.autoFormatNumber }),
-            ...(c.growthLabel && { growthLabel: c.growthLabel }),
-            ...(c.unit && { unit: c.unit }),
-            ...(c.milestone && { milestone: c.milestone }),
-            ...(c.milestoneBefore && { milestoneBefore: c.milestoneBefore }),
-            ...(c.milestoneGoal && { milestoneGoal: c.milestoneGoal }),
-            ...(c.goalLabel && { goalLabel: c.goalLabel }),
+            ...(c.growthLabel !== undefined && { growthLabel: c.growthLabel }),
+            ...(c.unit !== undefined && { unit: c.unit }),
+            ...(c.milestone !== undefined && { milestone: c.milestone }),
+            ...(c.milestoneBefore !== undefined && { milestoneBefore: c.milestoneBefore }),
+            ...(c.milestoneGoal !== undefined && { milestoneGoal: c.milestoneGoal }),
+            ...(c.goalLabel !== undefined && { goalLabel: c.goalLabel }),
             ...(c.showLiveBadge !== undefined && { showLiveBadge: c.showLiveBadge }),
-            ...(c.message && { message: c.message }),
-            ...(c.mStyle && { mStyle: c.mStyle }),
-            ...(c.unitStyle && { unitStyle: c.unitStyle }),
-            ...(c.messageStyle && { messageStyle: c.messageStyle }),
+            ...(c.message !== undefined && { message: c.message }),
+            ...(c.mStyle !== undefined && { mStyle: c.mStyle }),
+            ...(c.unitStyle !== undefined && { unitStyle: c.unitStyle }),
+            ...(c.messageStyle !== undefined && { messageStyle: c.messageStyle }),
+            // Seed field defaults (only for missing values)
+            ...fieldDefaults,
         })
-    }, [config, onChange])
+
+        onTemplateChange(tpl)
+    }, [config, onChange, onTemplateChange])
 
     const filtered = category === "All" ? TEMPLATES : TEMPLATES.filter(t => t.category === category)
 
     return (
-        <Sidebar collapsible="none" className="w-[320px] min-w-[320px] max-w-[320px] lg:h-[calc(100vh-56px)] lg:sticky lg:top-14 overflow-y-auto border-r border-white/[0.05]" style={{ background: "#0a0c10" }}>
+        <Sidebar
+            collapsible="none"
+            className="w-[300px] min-w-[300px] max-w-[300px] lg:h-[calc(100vh-56px)] lg:sticky lg:top-14 overflow-y-auto border-l border-white/[0.05]"
+            style={{ background: "#0a0c10" }}
+        >
             <SidebarContent>
+                <Product />
                 {/* Header */}
                 <div className="px-4 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-3">Templates</p>
@@ -72,7 +96,12 @@ const RightSidebarEditor = ({ config, onChange }: Props) => {
                 {/* Grid */}
                 <div className="p-3 grid grid-cols-2 gap-2">
                     {filtered.map(tpl => (
-                        <MiniCard key={tpl.id} tpl={tpl} active={activeTpl === tpl.id} onClick={() => applyTemplate(tpl)} />
+                        <MiniCard
+                            key={tpl.id}
+                            tpl={tpl}
+                            active={activeTemplateId === tpl.id}
+                            onClick={() => applyTemplate(tpl)}
+                        />
                     ))}
                 </div>
             </SidebarContent>
@@ -83,49 +112,48 @@ const RightSidebarEditor = ({ config, onChange }: Props) => {
 export default RightSidebarEditor
 
 /* ── MiniCard ── */
-function MiniCard({ tpl, active, onClick }: { tpl: typeof TEMPLATES[number]; active: boolean; onClick: () => void }) {
+function MiniCard({ tpl, active, onClick }: { tpl: TemplateDef; active: boolean; onClick: () => void }) {
     const [hovered, setHovered] = useState(false)
     const c = tpl.cfg
     const light = isLight(c.backgroundValue)
     const sec = light ? "#777" : "#666"
     const pri = light ? "#111" : "#fff"
-
-    // Safe: mStyle is always present in all templates now
     const ms = c.mStyle
-    const mColor = ms.color || pri
+    const mColor = ms?.color || pri
 
     const displayVal = c.autoFormatNumber
         ? fmtNum(c.milestone || "10K", true, c.currencyPrefix || "")
         : (c.currencyPrefix || "") + (c.milestone || "10K")
 
-    // Determine mini preview content by card mode
     const mode = c.cardMode || "standard"
 
     return (
-        <button onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        <button
+            onClick={onClick}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
             style={{
                 all: "unset", cursor: "pointer", display: "block", width: "100%",
                 borderRadius: 10, overflow: "hidden", position: "relative",
-                border: active ? "2px solid rgba(255,255,255,0.35)" : hovered ? "2px solid rgba(255,255,255,0.12)" : "2px solid rgba(255,255,255,0.05)",
-                boxShadow: active ? "0 0 0 3px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.5)" : "0 2px 8px rgba(0,0,0,0.3)",
+                border: active
+                    ? "2px solid rgba(255,255,255,0.35)"
+                    : hovered ? "2px solid rgba(255,255,255,0.12)" : "2px solid rgba(255,255,255,0.05)",
+                boxShadow: active
+                    ? "0 0 0 3px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.5)"
+                    : "0 2px 8px rgba(0,0,0,0.3)",
                 transform: active ? "scale(1.03)" : hovered ? "scale(1.01)" : "scale(1)",
                 transition: "all 0.18s ease",
             }}>
 
             {/* Card face */}
             <div style={{
-                aspectRatio: "1/1", background: c.backgroundValue,
-                padding: "11%", display: "flex", flexDirection: "column", justifyContent: "space-between",
+                aspectRatio: "1/1",
+                background: c.backgroundValue,
+                padding: "11%",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
                 position: "relative", overflow: "hidden", boxSizing: "border-box",
             }}>
-                {/* Story bar */}
-                {/* {mode === "story" && c?.storyProgress != null && (
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "rgba(255,255,255,0.12)" }}>
-                        <div style={{ height: "100%", width: `${c.storyProgress || 70}%`, background: c.accentColor || "#00ff87" }} />
-                    </div>
-                )} */}
-
-                {/* TikTok duotone layers */}
+                {/* TikTok duotone */}
                 {mode === "tiktokDuotone" && (
                     <>
                         <div style={{ position: "absolute", inset: 0, background: "#fe2c55", opacity: 0.5, transform: "translate(2px,-1px)", mixBlendMode: "screen", pointerEvents: "none" }} />
@@ -133,67 +161,72 @@ function MiniCard({ tpl, active, onClick }: { tpl: typeof TEMPLATES[number]; act
                     </>
                 )}
 
-                {/* Slot machine: show 3 rows */}
+                {/* Story bar */}
+                {mode === "story" && (
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "rgba(255,255,255,0.12)" }}>
+                        <div style={{ height: "100%", width: `${c.storyProgress || 70}%`, background: c.accentColor || "#00ff87" }} />
+                    </div>
+                )}
+
+                {/* Slot machine preview */}
                 {mode === "slotMachine" ? (
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 0 }}>
-                        {/* past */}
-                        <div style={{ textAlign: "center", opacity: 0.22, fontSize: Math.min(ms.size * 0.12, 12), fontFamily: ms.family, fontWeight: ms.weight, color: "#fff", letterSpacing: (ms.spacing || 0) * 0.2, lineHeight: 1.3 }}>
+                        <div style={{ textAlign: "center", opacity: 0.22, fontSize: Math.min((ms?.size || 56) * 0.12, 11), fontFamily: ms?.family, fontWeight: ms?.weight, color: "#fff", lineHeight: 1.3 }}>
                             {c.milestoneBefore || "8K"}
                         </div>
                         <div style={{ height: 0.5, background: "rgba(255,255,255,0.1)", margin: "2px 0" }} />
-                        {/* current */}
-                        <div style={{ textAlign: "center", fontSize: Math.min(ms.size * 0.19, 22), fontFamily: ms.family, fontWeight: ms.weight, color: "#fff", letterSpacing: (ms.spacing || 0) * 0.22, lineHeight: 1 }}>
+                        <div style={{ textAlign: "center", fontSize: Math.min((ms?.size || 56) * 0.19, 22), fontFamily: ms?.family, fontWeight: ms?.weight, color: "#fff", lineHeight: 1 }}>
                             {displayVal}
                         </div>
                         <div style={{ height: 0.5, background: "rgba(255,255,255,0.1)", margin: "2px 0" }} />
-                        {/* goal */}
-                        <div style={{ textAlign: "center", opacity: 0.22, fontSize: Math.min(ms.size * 0.12, 12), fontFamily: ms.family, fontWeight: ms.weight, color: "#fff", letterSpacing: (ms.spacing || 0) * 0.2, lineHeight: 1.3 }}>
-                            {(c as any).milestoneGoal || "15K"}
+                        <div style={{ textAlign: "center", opacity: 0.22, fontSize: Math.min((ms?.size || 56) * 0.12, 11), fontFamily: ms?.family, fontWeight: ms?.weight, color: "#fff", lineHeight: 1.3 }}>
+                            {c.milestoneGoal || "15K"}
                         </div>
                     </div>
+
                 ) : mode === "progressTarget" ? (
-                    /* PH progress bar preview */
                     <>
-                        <div style={{ textAlign: ms.align || "left" }}>
-                            <div style={{ fontSize: 6, textTransform: "uppercase", letterSpacing: 2, color: "rgba(255,255,255,0.55)", opacity: 0.7 }}>
-                                {PLATFORMS[(c.platform || "producthunt") as Platform]?.label}
-                            </div>
+                        <div style={{ fontSize: 6, textTransform: "uppercase", letterSpacing: 2, color: "rgba(255,255,255,0.55)", position: "relative", zIndex: 2 }}>
+                            {PLATFORMS[(c.platform || "producthunt") as Platform]?.label}
                         </div>
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                            <div style={{ fontFamily: ms.family, fontWeight: ms.weight, fontSize: Math.min(ms.size * 0.19, 22), letterSpacing: (ms.spacing || 0) * 0.22, color: mColor, lineHeight: 1 }}>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 2 }}>
+                            <div style={{ fontFamily: ms?.family, fontWeight: ms?.weight, fontSize: Math.min((ms?.size || 88) * 0.19, 22), color: mColor, lineHeight: 1 }}>
                                 {displayVal}
                             </div>
                             <div style={{ fontSize: 5.5, color: sec, marginTop: 2, textTransform: "uppercase", letterSpacing: 1.5 }}>{c.unit || "upvotes"}</div>
                             <div style={{ marginTop: 4, height: 2, background: "rgba(255,255,255,0.2)", borderRadius: 1, overflow: "hidden" }}>
-                                <div style={{ height: "100%", width: `${Math.round((parseFloat(c.milestone) / parseFloat((c as any).milestoneGoal || "120")) * 100)}%`, background: "#fff", borderRadius: 1 }} />
+                                <div style={{
+                                    height: "100%",
+                                    width: `${c.milestone && c.milestoneGoal ? Math.min(100, Math.round((parseFloat(c.milestone) / parseFloat(c.milestoneGoal)) * 100)) : 83}%`,
+                                    background: "#fff", borderRadius: 1,
+                                }} />
                             </div>
                         </div>
                     </>
+
                 ) : (
-                    /* Standard / beforeAfter / rank / tiktokDuotone */
                     <>
                         {/* Badge */}
-                        {(c.showPlatformBadge ?? (c as any).showBadge) ? (
-                            <div style={{ textAlign: ms.align || "left", position: "relative", zIndex: 2 }}>
+                        {c.showPlatformBadge ? (
+                            <div style={{ textAlign: ms?.align || "left", position: "relative", zIndex: 2 }}>
                                 <div style={{ fontSize: 6, textTransform: "uppercase", letterSpacing: 2, color: sec, opacity: 0.7 }}>
-                                    {PLATFORMS[(c.platform || "twitter") as Platform]?.label || "Platform"}
+                                    {PLATFORMS[(c.platform || "twitter") as Platform]?.label}
                                 </div>
                             </div>
                         ) : <div />}
 
-                        {/* Milestone */}
+                        {/* Number */}
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 2 }}>
                             <div style={{
-                                fontFamily: ms.family, fontWeight: ms.weight,
-                                fontSize: Math.min(ms.size * 0.19, 24),
-                                letterSpacing: (ms.spacing || 0) * 0.22,
+                                fontFamily: ms?.family, fontWeight: ms?.weight,
+                                fontSize: Math.min((ms?.size || 88) * 0.19, 24),
+                                letterSpacing: ((ms?.spacing || 0) * 0.22),
                                 color: mColor, lineHeight: 1,
-                                textAlign: ms.align || "left",
-                                textTransform: ms.uppercase ? "uppercase" : "none",
+                                textAlign: ms?.align || "left",
                             }}>
                                 {mode === "beforeAfter" ? `${c.milestoneBefore || "0"} →` : displayVal}
                             </div>
-                            <div style={{ fontSize: 5.5, color: sec, marginTop: 2, textTransform: "uppercase", letterSpacing: 1.5, textAlign: ms.align || "left", opacity: 0.8 }}>
+                            <div style={{ fontSize: 5.5, color: sec, marginTop: 2, textTransform: "uppercase", letterSpacing: 1.5, textAlign: ms?.align || "left", opacity: 0.8 }}>
                                 {c.unit || "followers"}
                             </div>
                         </div>
@@ -210,7 +243,7 @@ function MiniCard({ tpl, active, onClick }: { tpl: typeof TEMPLATES[number]; act
             {/* Label overlay */}
             <div style={{
                 position: "absolute", bottom: 0, left: 0, right: 0,
-                background: "linear-gradient(to top,rgba(0,0,0,0.88) 0%,transparent 100%)",
+                background: "linear-gradient(to top,rgba(0,0,0,0.9) 0%,transparent 100%)",
                 padding: "22px 8px 7px",
                 display: "flex", alignItems: "flex-end", justifyContent: "space-between",
             }}>
