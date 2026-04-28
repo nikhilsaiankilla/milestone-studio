@@ -5,9 +5,9 @@ import Link from "next/link"
 import { Button } from "./ui/button"
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react"
 import { useEffect, useMemo, useState } from "react"
-import { AlignCenter, AlignLeft, AlignRight, ChevronDown, GripVertical, IdCard, Layout, Plus, Shuffle, ShuffleIcon, TrendingUp, Users, X } from "lucide-react"
+import { AlignCenter, AlignLeft, AlignRight, ChevronDown, GripVertical, IdCard, Layout, Plus, Shuffle, ShuffleIcon, Sparkle, Sparkles, TrendingUp, Users, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { FONTS, GRADIENTS, PLATFORMS, PlatformType, TEMPLATES } from "@/types/card"
+import { FONTS, GRADIENT_CATEGORIES, PLATFORMS, PlatformType, TEMPLATES } from "@/types/card"
 import { Separator } from "./ui/separator"
 import { Label } from "./ui/label"
 import { Switch } from "./ui/switch"
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { toPng } from "html-to-image"
 import { useRef } from "react"
 import { toast } from "sonner"
+import { Kbd, KbdGroup } from "./ui/kbd"
 
 const Dashboard = () => {
     const [stars, setStars] = useState<number | null>(null)
@@ -23,6 +24,9 @@ const Dashboard = () => {
 
     const [copying, setCopying] = useState(false)
     const [downloading, setDownloading] = useState(false)
+
+    const [canUndo, setCanUndo] = useState(false)
+    const [canRedo, setCanRedo] = useState(false)
 
     // state
     const [textColor, setTextColor] = useState("#0f172a")
@@ -38,7 +42,9 @@ const Dashboard = () => {
 
     const [selectedFont, setSelectedFont] = useState(FONTS[0].value)
 
-    const [selectedGradient, setSelectedGradient] = useState(GRADIENTS[0])
+    const [selectedGradient, setSelectedGradient] = useState(
+        Object.values(GRADIENT_CATEGORIES)[0][0]
+    );
 
     const [handle, setHandle] = useState('');
     const [platform, setPlatform] = useState<PlatformType | null>(PLATFORMS[0])
@@ -145,7 +151,213 @@ const Dashboard = () => {
 
         return slots.slice(0, emojiCount).map((s, i) => ({ id: i, ...s }))
     }, [selectedEmoji, emojiCount])
-    
+
+    useEffect(() => {
+        const history: Array<{
+            gradient: string
+            textColor: string
+            font: string
+            alignment: "left" | "center" | "right"
+            ratio: "square" | "landscape" | "portrait"
+            noise: boolean
+            emoji: string | null
+            emojiCount: number
+        }> = []
+
+        let currentIndex = -1
+        let isTraveling = false
+
+        const snapshot = () => ({
+            gradient: selectedGradient,
+            textColor,
+            font: selectedFont,
+            alignment,
+            ratio,
+            noise: noiseEnabled,
+            emoji: selectedEmoji,
+            emojiCount,
+        })
+
+        const push = () => {
+            if (isTraveling) return
+            history.splice(currentIndex + 1)
+            history.push(snapshot())
+            currentIndex = history.length - 1
+        }
+
+        push()
+
+        const restore = (index: number) => {
+            const s = history[index]
+            if (!s) return
+            isTraveling = true
+            setSelectedGradient(s.gradient)
+            setTextColor(s.textColor)
+            setSelectedFont(s.font)
+            setAlignment(s.alignment)
+            setRatio(s.ratio)
+            setNoiseEnabled(s.noise)
+            setSelectedEmoji(s.emoji)
+            setEmojiCount(s.emojiCount)
+            setTimeout(() => { isTraveling = false }, 50)
+        }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const mod = e.ctrlKey || e.metaKey
+            if (!mod) return
+
+            if (e.key === "z" && !e.shiftKey) {
+                e.preventDefault()
+                if (currentIndex > 0) {
+                    currentIndex--
+                    restore(currentIndex)
+                }
+            }
+
+            if ((e.key === "y") || (e.key === "z" && e.shiftKey)) {
+                e.preventDefault()
+                if (currentIndex < history.length - 1) {
+                    currentIndex++
+                    restore(currentIndex)
+                }
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown)
+        return () => window.removeEventListener("keydown", handleKeyDown)
+    }, [
+        selectedGradient, textColor, selectedFont,
+        alignment, ratio, noiseEnabled, selectedEmoji, emojiCount
+    ])
+
+
+    const historyRef = useRef<Array<{
+        gradient: string
+        textColor: string
+        font: string
+        alignment: "left" | "center" | "right"
+        ratio: "square" | "landscape" | "portrait"
+        noise: boolean
+        emoji: string | null
+        emojiCount: number
+    }>>([])
+    const currentIndexRef = useRef(-1)
+    const isTravelingRef = useRef(false)
+
+    // Snapshot pusher — call this whenever state changes
+    useEffect(() => {
+        if (isTravelingRef.current) return
+        const snapshot = {
+            gradient: selectedGradient,
+            textColor,
+            font: selectedFont,
+            alignment,
+            ratio,
+            noise: noiseEnabled,
+            emoji: selectedEmoji,
+            emojiCount,
+        }
+        // Trim future on new change
+        historyRef.current = historyRef.current.slice(0, currentIndexRef.current + 1)
+        historyRef.current.push(snapshot)
+        currentIndexRef.current = historyRef.current.length - 1
+    }, [selectedGradient, textColor, selectedFont, alignment, ratio, noiseEnabled, selectedEmoji, emojiCount])
+
+    // Keyboard handler — separate effect, runs once
+    useEffect(() => {
+        const restore = (index: number) => {
+            const s = historyRef.current[index]
+            if (!s) return
+            isTravelingRef.current = true
+            setSelectedGradient(s.gradient)
+            setTextColor(s.textColor)
+            setSelectedFont(s.font)
+            setAlignment(s.alignment)
+            setRatio(s.ratio)
+            setNoiseEnabled(s.noise)
+            setSelectedEmoji(s.emoji)
+            setEmojiCount(s.emojiCount)
+            setTimeout(() => { isTravelingRef.current = false }, 100)
+        }
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const mod = e.ctrlKey || e.metaKey
+
+            if (mod && e.key === "z" && !e.shiftKey) {
+                e.preventDefault()
+                e.stopPropagation()
+                if (currentIndexRef.current > 0) {
+                    currentIndexRef.current--
+                    restore(currentIndexRef.current)
+                }
+                return
+            }
+
+            if (mod && (e.key === "y" || (e.key === "z" && e.shiftKey))) {
+                e.preventDefault()
+                e.stopPropagation()
+                if (currentIndexRef.current < historyRef.current.length - 1) {
+                    currentIndexRef.current++
+                    restore(currentIndexRef.current)
+                }
+                return
+            }
+
+            if (mod && e.key === "r") {
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown, { capture: true })
+        return () => window.removeEventListener("keydown", handleKeyDown, { capture: true })
+    }, [])
+
+
+    const getRandom = <T,>(arr: T[]): T => {
+        return arr[Math.floor(Math.random() * arr.length)]
+    }
+
+    const shuffleStyle = () => {
+        // gradients
+        const allGradients = Object.values(GRADIENT_CATEGORIES).flat()
+        const randomGradient = getRandom(allGradients)
+
+        // fonts
+        const randomFont = getRandom(FONTS).value
+
+        // alignment
+        const alignments: ("left" | "center" | "right")[] = ["left", "center", "right"]
+        const randomAlignment = getRandom(alignments)
+
+        // ratio
+        const ratios: ("square" | "landscape" | "portrait")[] = ["square", "landscape", "portrait"]
+        const randomRatio = getRandom(ratios)
+
+        // emoji (optional randomness)
+        const shouldUseEmoji = Math.random() > 0.5
+
+        // text color logic (THIS IS IMPORTANT)
+        const darkText = "#0f172a"
+        const lightText = "#ffffff"
+
+        const useLightText = Math.random() > 0.5
+        const randomTextColor = useLightText ? lightText : darkText
+
+        // apply all
+        setSelectedGradient(randomGradient)
+        setSelectedFont(randomFont)
+        setAlignment(randomAlignment)
+        setRatio(randomRatio)
+        setTextColor(randomTextColor)
+
+        setSelectedEmoji(shouldUseEmoji ? selectedEmoji || "🔥" : null)
+        setEmojiCount(Math.floor(Math.random() * 8) + 3)
+
+        // optional spice
+        setNoiseEnabled(Math.random() > 0.3)
+    }
+
     return (
         <div className="w-full h-screen overflow-hidden flex flex-col">
             <nav className="bg-card w-full border-b-2 border-white/10 flex items-center justify-between px-5 py-4 shrink-0" >
@@ -164,6 +376,18 @@ const Dashboard = () => {
                     </h1>
                 </Link>
                 <div className="flex items-center justify-center gap-3">
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="text-xs text-muted-foreground">
+                            <KbdGroup>
+                                <Kbd>Ctrl + Z</Kbd>
+                                <span>Undo</span>
+                                <span className="mx-1">•</span>
+                                <Kbd>Ctrl + Y</Kbd>
+                                <span>Redo</span>
+                            </KbdGroup>
+                        </p>
+                    </div>
+
                     {/* GitHub Button */}
                     <Link href="https://github.com/nikhilsaiankilla/milestone-studio" target="_blank">
                         <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
@@ -210,7 +434,7 @@ const Dashboard = () => {
                         </Button>
                     </Link>
 
-                    <Link href="https://www.buymeacoffee.com/yourusername" target="_blank">
+                    <Link href="https://www.buymeacoffee.com/nikhilsaiankilla" target="_blank">
                         <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
                             <Image
                                 src={'/buymeacoffee.png'}
@@ -242,14 +466,14 @@ const Dashboard = () => {
                                             onClick={() => setActive(tpl.id)}
                                             className={cn(
                                                 "relative rounded-xl w-full aspect-square flex items-center justify-center transition-all border cursor-pointer",
-                                                active === tpl.id ? "border-yellow-500 bg-[#2a2416] shadow-[0_0_0_2px_rgba(234,179,8,0.4)]" : "border-white/10 bg-[#121212] hover:bg-[#121212]/70"
+                                                active === tpl.id ? "border-primary bg-[#2a2416] shadow-[0_0_0_2px_rgba(234,179,8,0.4)]" : "border-white/10 bg-[#121212] hover:bg-[#121212]/70"
                                             )}
                                         >
-                                            <div className={cn("h-8 flex items-center", active === tpl.id ? "text-orange-500" : "text-white/10")}>
+                                            <div className={cn("h-8 flex items-center", active === tpl.id ? "text-primary" : "text-white/10")}>
                                                 {tpl.skeleton}
                                             </div>
                                         </button>
-                                        <span className={cn("text-[10px] font-semibold", active === tpl.id ? "text-yellow-400" : "text-white/60")}>
+                                        <span className={cn("text-[10px] font-semibold", active === tpl.id ? "text-primary" : "text-white/60")}>
                                             {tpl.label}
                                         </span>
                                     </div>
@@ -274,16 +498,15 @@ const Dashboard = () => {
                                         <button
                                             key={p.value}
                                             onClick={() => setPlatform(p)}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-all
+                                            className={`flex items-center gap-2 p-3 rounded-lg text-sm border transition-all cursor-pointer
                                                 ${isActive
-                                                    ? "bg-yellow-500 text-black border-yellow-500"
+                                                    ? "bg-primary text-black border-primary"
                                                     : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
                                                 }`}
                                         >
                                             <span className={`${isActive ? "text-black" : "text-white/60"}`}>
                                                 {p.icon}
                                             </span>
-                                            {p.label}
                                         </button>
                                     )
                                 })}
@@ -363,7 +586,7 @@ const Dashboard = () => {
                         <section className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-base">✨</span>
+                                    <Sparkles size={16} />
                                     <span className="text-xs font-bold uppercase tracking-wider text-white/60">Emoji Scatter</span>
                                 </div>
                                 {selectedEmoji && (
@@ -381,7 +604,7 @@ const Dashboard = () => {
                                 className={cn(
                                     "w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-all",
                                     showEmojiPicker
-                                        ? "border-yellow-500/50 bg-yellow-500/5 text-white"
+                                        ? "border-primary bg-yellow-500/5 text-white"
                                         : "border-white/10 bg-[#1a1a1a] text-white/50 hover:text-white/80"
                                 )}
                             >
@@ -422,7 +645,7 @@ const Dashboard = () => {
                                         max={20}
                                         value={emojiCount}
                                         onChange={(e) => setEmojiCount(Number(e.target.value))}
-                                        className="w-full accent-yellow-500 cursor-pointer"
+                                        className="w-full accent-primary cursor-pointer"
                                     />
                                     <div className="flex justify-between text-[9px] text-white/20 font-medium">
                                         <span>Minimal</span>
@@ -438,7 +661,7 @@ const Dashboard = () => {
                     <div className="shrink-0 p-4 border-t border-white/5 bg-white/5 space-y-3">
                         <Button
                             onClick={handleDownload}
-                            className="w-full cursor-pointer py-5 from-primary-500 to-primary hover:opacity-90 text-black font-bold rounded-xl"
+                            className="w-full bg-primary cursor-pointer py-5 font-bold rounded-xl"
                         >
                             {
                                 downloading ? <>Downloading</> : "Download image"
@@ -447,7 +670,7 @@ const Dashboard = () => {
                         <Button
                             onClick={handleCopy}
                             variant="outline"
-                            className="w-full py-5 cursor-pointer rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
+                            className="w-full py-5 cursor-pointer rounded-xl"
                         >
                             {
                                 copying ? "Copying" : 'Copy'
@@ -457,7 +680,13 @@ const Dashboard = () => {
                 </div>
 
                 {/* CENTER CONTAINER  */}
-                <div className="flex-1 min-w-0 overflow-y-auto p-10">
+                <div className="flex-1 min-w-0 overflow-y-auto p-10"
+                    style={{
+                        backgroundColor: "#000000",
+                        backgroundImage: "radial-gradient(rgba(229, 231, 235, 0.15) 1px, transparent 1px)",
+                        backgroundSize: "20px 20px"
+                    }}
+                >
                     <div className="w-full max-w-2xl! flex flex-col gap-2 mx-auto">
                         <div
                             ref={cardRef}
@@ -500,6 +729,15 @@ const Dashboard = () => {
                                 </span>
                             ))}
 
+                            <p className="absolute right-6 bottom-6 z-10 font-semibold flex items-center gap-1"
+                                style={{ color: textColor }}
+                            >
+                                {
+                                    handle && platform?.icon
+                                }
+                                {handle}
+                            </p>
+
                             {active === "metrics" && (
                                 <>
                                     <div
@@ -521,16 +759,34 @@ const Dashboard = () => {
                                             <span>10 Followers</span>
                                         </div>
                                     </div>
-
-                                    <p className="absolute right-6 bottom-6 z-10 font-semibold flex items-center gap-1"
-                                        style={{ color: textColor }}
-                                    >
-                                        {
-                                            handle && platform?.icon
-                                        }
-                                        {handle}
-                                    </p>
                                 </>
+                            )}
+
+                            {active === "milestone" && (
+                                <div
+                                    className="relative z-10 flex flex-col items-center justify-center"
+                                    style={{ color: textColor, fontFamily: selectedFont }}
+                                >
+                                    {/* TOP (GOAL) */}
+                                    <div className="text-lg opacity-30 tracking-wide">
+                                        900
+                                    </div>
+
+                                    {/* CENTER BLOCK */}
+                                    <div className="flex flex-col items-center my-3">
+                                        <div className="text-7xl md:text-8xl font-extrabold leading-none tracking-tight">
+                                            800
+                                        </div>
+                                        <div className="text-xs mt-2 uppercase tracking-[0.25em] opacity-60">
+                                            followers
+                                        </div>
+                                    </div>
+
+                                    {/* BOTTOM (PAST) */}
+                                    <div className="text-lg opacity-30 tracking-wide">
+                                        700
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -542,25 +798,50 @@ const Dashboard = () => {
                     {/* Scrollable Content Area */}
                     <div className="flex-1 w-full overflow-y-auto p-4 space-y-5 custom-scroll">
 
-                        {/* Gradients */}
-                        <section className="space-y-2">
-                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Gradients</span>
-                            <div className="grid grid-cols-4 gap-2">
-                                {GRADIENTS.map((item, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setSelectedGradient(item)}
-                                        className={cn(
-                                            "w-full aspect-square rounded-lg border cursor-pointer transition-all",
-                                            selectedGradient === item
-                                                ? "border-2 border-white/60 scale-95"
-                                                : "border-white/10 hover:border-white/30"
-                                        )}
-                                        style={{ background: item }}
-                                    />
-                                ))}
-                            </div>
-                        </section>
+                        <div className="space-y-6">
+                            {Object.entries(GRADIENT_CATEGORIES).map(([category, items]) => (
+                                <section key={category} className="space-y-3">
+                                    {/* Category Label */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold whitespace-nowrap">
+                                            {category}
+                                        </span>
+                                        <div className="h-[1px] w-full bg-white/5" />
+                                    </div>
+
+                                    {/* Gradient Grid */}
+                                    <div className="grid grid-cols-6 gap-2">
+                                        {items.map((item, i) => (
+                                            <button
+                                                key={`${category}-${i}`}
+                                                onClick={() => setSelectedGradient(item)}
+                                                className={cn(
+                                                    // Core Layout
+                                                    "relative w-full aspect-square rounded-xl border transition-all duration-300 overflow-hidden",
+                                                    // Interactive states
+                                                    "cursor-pointer group active:scale-95",
+                                                    // Selection Logic: High contrast border for selected, subtle for inactive
+                                                    selectedGradient === item
+                                                        ? "border-white/90 ring-4 ring-white/20 z-10 scale-95"
+                                                        : "border-white/10 hover:border-white/40 hover:shadow-lg hover:shadow-black/20"
+                                                )}
+                                                style={{
+                                                    background: item,
+                                                    backgroundSize: "cover", // Ensures the mesh fills the square
+                                                }}
+                                                aria-label={`Select ${category} gradient ${i + 1}`}
+                                            >
+                                                {/* Inner Gloss/Shadow Overlay to make it look 3D */}
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent opacity-40" />
+
+                                                {/* Subtle Shine on hover */}
+                                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
+                            ))}
+                        </div>
 
                         <Separator className="opacity-20" />
 
@@ -654,10 +935,10 @@ const Dashboard = () => {
                                     variant="ghost"
                                     className={cn(
                                         "flex flex-col items-center gap-1.5 h-auto py-3 rounded-lg cursor-pointer border transition-all",
-                                        ratio === "square" ? "border-yellow-500 bg-yellow-500/10 text-yellow-400" : "border-white/10 text-white/40 hover:text-white/60"
+                                        ratio === "square" ? "border-primary bg-yellow-500/10 text-primary" : "border-white/10 text-white/40 hover:text-white/60"
                                     )}
                                 >
-                                    <div className={cn("w-6 h-6 rounded-sm border-2", ratio === "square" ? "border-yellow-400" : "border-current")} />
+                                    <div className={cn("w-6 h-6 rounded-sm border-2", ratio === "square" ? "border-primary" : "border-current")} />
                                     <span className="text-[10px] font-bold">1:1</span>
                                 </Button>
 
@@ -666,10 +947,10 @@ const Dashboard = () => {
                                     variant="ghost"
                                     className={cn(
                                         "flex flex-col items-center gap-1.5 h-auto py-3 rounded-lg cursor-pointer border transition-all",
-                                        ratio === "landscape" ? "border-yellow-500 bg-yellow-500/10 text-yellow-400" : "border-white/10 text-white/40 hover:text-white/60"
+                                        ratio === "landscape" ? "border-primary bg-primary/10 text-primary" : "border-white/10 text-white/40 hover:text-white/60"
                                     )}
                                 >
-                                    <div className={cn("w-8 h-[18px] rounded-sm border-2", ratio === "landscape" ? "border-yellow-400" : "border-current")} />
+                                    <div className={cn("w-8 h-[18px] rounded-sm border-2", ratio === "landscape" ? "border-primary" : "border-current")} />
                                     <span className="text-[10px] font-bold">16:9</span>
                                 </Button>
 
@@ -678,21 +959,24 @@ const Dashboard = () => {
                                     variant="ghost"
                                     className={cn(
                                         "flex flex-col items-center gap-1.5 h-auto py-3 rounded-lg cursor-pointer border transition-all",
-                                        ratio === "portrait" ? "border-yellow-500 bg-yellow-500/10 text-yellow-400" : "border-white/10 text-white/40 hover:text-white/60"
+                                        ratio === "portrait" ? "border-primary bg-primary/10 text-primary" : "border-white/10 text-white/40 hover:text-white/60"
                                     )}
                                 >
-                                    <div className={cn("w-[18px] h-8 rounded-sm border-2", ratio === "portrait" ? "border-yellow-400" : "border-current")} />
+                                    <div className={cn("w-[18px] h-8 rounded-sm border-2", ratio === "portrait" ? "border-primary" : "border-current")} />
                                     <span className="text-[10px] font-bold">9:16</span>
                                 </Button>
                             </div>
                         </div>
 
                         {/* Randomize */}
-                        <Button className="w-full cursor-pointer" variant="outline">
+                        <Button
+                            className="w-full cursor-pointer"
+                            variant="outline"
+                            onClick={shuffleStyle}
+                        >
                             <ShuffleIcon size={14} />
                             <span>Randomize Style</span>
                         </Button>
-
                     </div>
                 </div>
             </div>
