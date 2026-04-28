@@ -4,6 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* =====================================================
+   DESIGN TOKENS
+===================================================== */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -36,72 +40,18 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 /* =====================================================
-   LIGHT MODE — ORANGE PRIMARY
+   DEFAULT = DARK (THIS IS THE KEY CHANGE)
 ===================================================== */
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-
-  /* ORANGE PRIMARY */
-  --primary: oklch(0.65 0.24 50);
-  --primary-foreground: oklch(0.985 0 0);
-
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-
-  --accent: oklch(0.95 0.05 52);
-  --accent-foreground: oklch(0.32 0.08 52);
-
-  --destructive: oklch(0.577 0.245 27.325);
-
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-
-  /* ORANGE FOCUS RING */
-  --ring: oklch(0.72 0.19 52);
-
-  --chart-1: oklch(0.82 0.16 52);
-  --chart-2: oklch(0.72 0.19 52);
-  --chart-3: oklch(0.62 0.17 52);
-  --chart-4: oklch(0.52 0.14 52);
-  --chart-5: oklch(0.42 0.11 52);
-
-  --radius: 0.625rem;
-
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-
-  --sidebar-primary: oklch(0.72 0.19 52);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-
-  --sidebar-accent: oklch(0.95 0.05 52);
-  --sidebar-accent-foreground: oklch(0.32 0.08 52);
-
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.72 0.19 52);
-}
-
-.dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
 
@@ -128,8 +78,6 @@
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-
-  /* ORANGE FOCUS RING */
   --ring: oklch(0.76 0.18 52);
 
   --chart-1: oklch(0.82 0.16 52);
@@ -137,6 +85,8 @@
   --chart-3: oklch(0.62 0.17 52);
   --chart-4: oklch(0.52 0.14 52);
   --chart-5: oklch(0.42 0.11 52);
+
+  --radius: 0.625rem;
 
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
@@ -151,10 +101,58 @@
   --sidebar-ring: oklch(0.76 0.18 52);
 }
 
+/* =====================================================
+   LIGHT MODE (OPTIONAL)
+===================================================== */
+
+.light {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.65 0.24 50);
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+
+  --accent: oklch(0.95 0.05 52);
+  --accent-foreground: oklch(0.32 0.08 52);
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.72 0.19 52);
+
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+
+  --sidebar-primary: oklch(0.72 0.19 52);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+
+  --sidebar-accent: oklch(0.95 0.05 52);
+  --sidebar-accent-foreground: oklch(0.32 0.08 52);
+
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.72 0.19 52);
+}
+
+/* =====================================================
+   BASE STYLES
+===================================================== */
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    /* Custom Scrollbar Logic */
     scrollbar-width: thin;
     scrollbar-color: var(--muted-foreground) transparent;
   }
@@ -165,10 +163,6 @@
 
   .custom-scroll::-webkit-scrollbar {
     width: 4px;
-  }
-
-  .custom-scroll::-webkit-scrollbar-track {
-    background: transparent;
   }
 
   .custom-scroll::-webkit-scrollbar-thumb {
