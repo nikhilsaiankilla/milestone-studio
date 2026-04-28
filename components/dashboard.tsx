@@ -18,6 +18,26 @@ import { useRef } from "react"
 import { toast } from "sonner"
 import { Kbd, KbdGroup } from "./ui/kbd"
 
+import {
+    Heart,
+    Eye,
+    MessageCircle,
+    Share2,
+    Star
+} from "lucide-react"
+
+const METRIC_ICONS = {
+    users: Users,
+    growth: TrendingUp,
+    likes: Heart,
+    views: Eye,
+    comments: MessageCircle,
+    shares: Share2,
+    stars: Star
+} as const
+
+type MetricIconKey = keyof typeof METRIC_ICONS
+
 const Dashboard = () => {
     const [stars, setStars] = useState<number | null>(null)
     const [active, setActive] = useState("metrics")
@@ -25,8 +45,56 @@ const Dashboard = () => {
     const [copying, setCopying] = useState(false)
     const [downloading, setDownloading] = useState(false)
 
-    const [canUndo, setCanUndo] = useState(false)
-    const [canRedo, setCanRedo] = useState(false)
+    const [metrics, setMetrics] = useState([
+        {
+            id: crypto.randomUUID(),
+            value: "0",
+            label: "Followers",
+            icon: "users"
+        }
+    ])
+
+    const [activeMetricIndex, setActiveMetricIndex] = useState(0)
+
+    const handleAddMetric = () => {
+        setMetrics((prev) => [
+            ...prev,
+            {
+                id: crypto.randomUUID(),
+                value: "0",
+                label: "Metric",
+                icon: 'users',
+            }
+        ])
+        setActiveMetricIndex(metrics.length) // switch to new one
+    }
+
+    const handleRemoveMetric = (index: number) => {
+        if (metrics.length <= 1) return;
+        setMetrics((prev) => {
+            const updated = prev.filter((_, i) => i !== index)
+
+            // fix active index
+            if (activeMetricIndex >= updated.length) {
+                setActiveMetricIndex(updated.length - 1)
+            }
+
+            return updated
+        })
+    }
+
+    const updateMetric = (
+        index: number,
+        data: Partial<{ value: string; label: string; icon: MetricIconKey }>
+    ) => {
+        setMetrics((prev) =>
+            prev.map((m, i) =>
+                i === index ? { ...m, ...data } : m
+            )
+        )
+    }
+
+    const activeMetric = metrics[activeMetricIndex]
 
     // state
     const [textColor, setTextColor] = useState("#0f172a")
@@ -358,6 +426,18 @@ const Dashboard = () => {
         setNoiseEnabled(Math.random() > 0.3)
     }
 
+    const inferIconFromLabel = (label: string): MetricIconKey => {
+        const l = label.toLowerCase()
+
+        if (l.includes("follower") || l.includes("user")) return "users"
+        if (l.includes("like")) return "likes"
+        if (l.includes("view")) return "views"
+        if (l.includes("comment")) return "comments"
+        if (l.includes("share")) return "shares"
+        if (l.includes("star")) return "stars"
+
+        return "users"
+    }
     return (
         <div className="w-full h-screen overflow-hidden flex flex-col">
             <nav className="bg-card w-full border-b-2 border-white/10 flex items-center justify-between px-5 py-4 shrink-0" >
@@ -530,9 +610,106 @@ const Dashboard = () => {
                                     />
                                 </div>
                             </div>
+                        </section>
 
+                        <Separator className="opacity-50" />
+
+                        {/* Metrics */}
+                        <div className="space-y-3 group">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Layout size={16} className="text-white/60" />
+                                    <span className="text-xs font-bold uppercase tracking-wider text-white/60">
+                                        Metrics
+                                    </span>
+                                </div>
+                                {/* ADD BUTTON */}
+                                <button
+                                    onClick={handleAddMetric}
+                                    className="px-3 py-2 border border-dashed border-white/20 rounded-lg text-xs text-white/40 hover:bg-white/5 flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={14} /> Add metric
+                                </button>
+                            </div>
+
+                            {/* MAIN INPUT ROW */}
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1 flex items-center bg-[#1a1a1a] border border-white/10 rounded-lg overflow-hidden">
+                                    {/* ICON SELECT (LEFT) */}
+
+                                    {/* <GripVertical size={16} className="text-white/20" /> */}
+
+                                    <Select
+                                        value={activeMetric.icon}
+                                        onValueChange={(value: string | null) => {
+                                            if (value) updateMetric(activeMetricIndex, { icon: value as MetricIconKey })
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-14 h-full bg-transparent rounded-none border-0 border-r border-white/10 px-2 focus:ring-0 focus:ring-offset-0">
+                                            <SelectValue>
+                                                {(() => {
+                                                    const Icon = METRIC_ICONS[activeMetric.icon as MetricIconKey]
+                                                    return <Icon size={16} />
+                                                })()}
+                                            </SelectValue>
+                                        </SelectTrigger>
+
+                                        <SelectContent>
+                                            {Object.keys(METRIC_ICONS).map((key) => {
+                                                const Icon = METRIC_ICONS[key as MetricIconKey]
+
+                                                return (
+                                                    <SelectItem key={key} value={key}>
+                                                        <div className="flex items-center gap-2">
+                                                            <Icon size={14} />
+                                                            <span className="capitalize">{key}</span>
+                                                        </div>
+                                                    </SelectItem>
+                                                )
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+
+                                    {/* VALUE */}
+                                    <input
+                                        type="text"
+                                        value={activeMetric.value}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            if (/^\d*$/.test(value)) {
+                                                updateMetric(activeMetricIndex, { value })
+                                            }
+                                        }}
+                                        className="w-16 bg-transparent border-r border-white/10 py-2 text-center text-sm focus:outline-none"
+                                    />
+
+                                    {/* LABEL */}
+                                    <input
+                                        value={activeMetric.label}
+                                        onChange={(e) => {
+                                            const label = e.target.value
+                                            updateMetric(activeMetricIndex, {
+                                                label,
+                                                icon: inferIconFromLabel(label)
+                                            })
+                                        }}
+                                        className="flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none"
+                                        placeholder="Followers"
+                                    />
+
+                                    {/* REMOVE */}
+                                    <button
+                                        onClick={() => handleRemoveMetric(activeMetricIndex)}
+                                        className="px-2 text-white/20 hover:text-white/60"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* SECONDARY CONTROLS (clearly separated) */}
                             <div className="space-y-2">
-                                <Label className="text-[13px] font-medium text-white/70">Heading</Label>
+                                {/* PERIOD */}
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
                                         <select className="w-full appearance-none bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none">
@@ -540,8 +717,13 @@ const Dashboard = () => {
                                         </select>
                                         <ChevronDown size={14} className="absolute right-3 top-3 text-white/40" />
                                     </div>
-                                    <Button variant="ghost" size="icon" className="text-white/40 hover:text-white"><X size={16} /></Button>
+
+                                    <Button variant="ghost" size="icon" className="text-white/40 hover:text-white">
+                                        <X size={16} />
+                                    </Button>
                                 </div>
+
+                                {/* YEAR RANGE */}
                                 <div className="flex items-center gap-2">
                                     <div className="relative flex-1">
                                         <select className="w-full appearance-none bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none">
@@ -549,37 +731,14 @@ const Dashboard = () => {
                                         </select>
                                         <ChevronDown size={14} className="absolute right-3 top-3 text-white/40" />
                                     </div>
+
                                     <input className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-2 text-center text-sm" defaultValue="1" />
                                     <span className="text-white/40">-</span>
                                     <input className="w-16 bg-[#1a1a1a] border border-white/10 rounded-lg px-2 py-2 text-center text-sm" defaultValue="2" />
                                 </div>
                             </div>
-                        </section>
 
-                        <Separator className="opacity-50" />
-
-                        {/* Metrics */}
-                        <section className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Layout size={16} className="text-white/60" />
-                                    <span className="text-xs font-bold uppercase tracking-wider text-white/60">Metrics</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 group">
-                                <GripVertical size={16} className="text-white/20" />
-                                <div className="flex-1 flex items-center bg-[#1a1a1a] border border-white/10 rounded-lg overflow-hidden">
-                                    <input className="w-14 bg-transparent border-r border-white/10 py-2 text-center text-sm focus:outline-none" defaultValue="10" />
-                                    <input className="flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none" placeholder="Followers" />
-                                    <button className="px-2 text-white/20 hover:text-white/60"><X size={14} /></button>
-                                </div>
-                            </div>
-
-                            <button className="w-full py-2 border border-dashed border-white/20 rounded-lg text-xs text-white/40 hover:bg-white/5 flex items-center justify-center gap-2">
-                                <Plus size={14} /> Add metric
-                            </button>
-                        </section>
+                        </div>
 
                         <Separator className="opacity-50" />
 
@@ -723,6 +882,11 @@ const Dashboard = () => {
                                         fontSize: `${e.size}px`,
                                         transform: `rotate(${e.rotation}deg)`,
                                         opacity: e.opacity,
+                                        filter: `blur(${e.size > 30 ? 0.6 : 1.4}px)`,
+                                        textShadow: `
+                                            ${e.size * 0.02}px ${e.size * 0.02}px ${e.size * 0.1}px rgba(0,0,0,0.2),
+                                            ${e.size * 0.04}px ${e.size * 0.04}px ${e.size * 0.2}px rgba(0,0,0,0.1)
+                                            `,
                                     }}
                                 >
                                     {selectedEmoji}
@@ -754,40 +918,63 @@ const Dashboard = () => {
                                             <span>+900%</span>
                                         </div>
 
-                                        <div className="flex items-center gap-4 text-6xl md:text-7xl font-extrabold tracking-tight">
-                                            <Users size={60} strokeWidth={2.5} />
-                                            <span>10 Followers</span>
+                                        <div className="flex flex-wrap items-center gap-6">
+                                            {metrics.map((m) => {
+                                                const Icon = METRIC_ICONS[m.icon as MetricIconKey] || Users
+
+                                                return (
+                                                    <div
+                                                        key={m.id}
+                                                        className="flex flex-col items-center"
+                                                    >
+                                                        <div className="flex items-center gap-2 text-4xl md:text-5xl font-extrabold tracking-tight">
+                                                            <Icon size={40} strokeWidth={2.5} />
+                                                            <span>{formatNumber(m.value)}</span>
+                                                        </div>
+
+                                                        <div className="text-xs mt-1 uppercase tracking-wider opacity-60">
+                                                            {m.label}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
                                         </div>
                                     </div>
                                 </>
                             )}
+                            {active === "milestone" && (() => {
+                                const metric = metrics[0]
+                                const value = parseValue(metric?.value || "0")
 
-                            {active === "milestone" && (
-                                <div
-                                    className="relative z-10 flex flex-col items-center justify-center"
-                                    style={{ color: textColor, fontFamily: selectedFont }}
-                                >
-                                    {/* TOP (GOAL) */}
-                                    <div className="text-lg opacity-30 tracking-wide">
-                                        900
-                                    </div>
+                                const { past, future } = getMilestones(value)
 
-                                    {/* CENTER BLOCK */}
-                                    <div className="flex flex-col items-center my-3">
-                                        <div className="text-7xl md:text-8xl font-extrabold leading-none tracking-tight">
-                                            800
+                                return (
+                                    <div
+                                        className="relative z-10 flex flex-col items-center justify-center"
+                                        style={{ color: textColor, fontFamily: selectedFont }}
+                                    >
+                                        {/* TOP (FUTURE) */}
+                                        <div className="text-4xl font-extrabold opacity-30 tracking-wide">
+                                            {formatNumber(future)}
                                         </div>
-                                        <div className="text-xs mt-2 uppercase tracking-[0.25em] opacity-60">
-                                            followers
+
+                                        {/* CENTER (CURRENT) */}
+                                        <div className="flex flex-col items-center">
+                                            <div className="text-7xl md:text-8xl font-extrabold leading-none">
+                                                {formatNumber(value)}
+                                            </div>
+                                            <div className="text-xs mt-2 uppercase tracking-[0.25em] opacity-60">
+                                                {metric?.label}
+                                            </div>
+                                        </div>
+
+                                        {/* BOTTOM (PAST) */}
+                                        <div className="text-4xl font-extrabold opacity-30 tracking-wide">
+                                            {formatNumber(past)}
                                         </div>
                                     </div>
-
-                                    {/* BOTTOM (PAST) */}
-                                    <div className="text-lg opacity-30 tracking-wide">
-                                        700
-                                    </div>
-                                </div>
-                            )}
+                                )
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -986,3 +1173,33 @@ const Dashboard = () => {
 
 export default Dashboard
 
+const formatNumber = (value: number | string) => {
+    const num = typeof value === "number" ? value : Number(value)
+    if (!num) return "0"
+
+    const format = (n: number) =>
+        parseFloat(n.toFixed(1)).toString()
+
+    if (num >= 1_000_000_000) return format(num / 1_000_000_000) + "B"
+    if (num >= 1_000_000) return format(num / 1_000_000) + "M"
+    if (num >= 1_000) return format(num / 1_000) + "K"
+
+    return num.toString()
+}
+
+const getMilestones = (value: number) => {
+    if (value <= 0) return { past: 0, future: 0 }
+
+    const magnitude = Math.pow(10, Math.floor(Math.log10(value)))
+    const step = magnitude
+
+    const past = Math.floor(value / step) * step
+    const future = past + step
+
+    return { past, future }
+}
+
+const parseValue = (value: string) => {
+    const num = Number(value)
+    return isNaN(num) ? 0 : num
+}
