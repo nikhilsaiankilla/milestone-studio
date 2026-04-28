@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import { Inter, Roboto } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next"
+import { Toaster } from "@/components/ui/sonner"
+
+import { Inter, Roboto, Playfair_Display, Space_Grotesk, Syne, DM_Sans } from "next/font/google";
+
+const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"], weight: ["400", "700", "900"] });
+const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"], weight: ["400", "700"] });
+const syne = Syne({ variable: "--font-syne", subsets: ["latin"], weight: ["400", "700", "800"] });
+const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"], weight: ["400", "700"] });
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -94,13 +101,14 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
     >
-      <body className={`min-h-screen w-full bg-background text-foreground font-sans antialiased ${roboto.variable} ${inter.variable}`}>
+      <body className={`min-h-screen w-full bg-background text-foreground font-sans antialiased ${roboto.variable} ${inter.variable} ${playfair.variable} ${spaceGrotesk.variable} ${syne.variable} ${dmSans.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
+          <Toaster />
           {children}
           <Analytics />
         </ThemeProvider>

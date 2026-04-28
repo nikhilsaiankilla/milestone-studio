@@ -4,17 +4,65 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "./ui/button"
 import { ThemeSwitch } from "./theme-switch"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { AlignCenter, AlignLeft, AlignRight, ChevronDown, GripVertical, IdCard, Layout, Plus, Shuffle, ShuffleIcon, TrendingUp, Users, X } from "lucide-react"
-import { Skeleton } from "./ui/skeleton"
 import { cn } from "@/lib/utils"
-import { TEMPLATES } from "@/types/card"
+import { FONTS, GRADIENTS, TEMPLATES } from "@/types/card"
 import { Separator } from "./ui/separator"
 import { Label } from "./ui/label"
+import { Switch } from "./ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+
+import { toPng } from "html-to-image"
+import { useRef } from "react"
+import { toast } from "sonner"
 
 const Dashboard = () => {
     const [stars, setStars] = useState<number | null>(null)
-    const [active, setActive] = useState("metrics");
+    const [active, setActive] = useState("metrics")
+
+    const [copying, setCopying] = useState(false)
+    const [downloading, setDownloading] = useState(false)
+
+    // state
+    const [textColor, setTextColor] = useState("#0f172a")
+
+    const [borderRadius] = useState(24)
+
+    const [noiseEnabled, setNoiseEnabled] = useState(true)
+    const [alignment, setAlignment] = useState<"left" | "center" | "right">("center")
+
+    const [ratio, setRatio] = useState<"square" | "landscape" | "portrait">(
+        "landscape"
+    )
+
+    const [selectedFont, setSelectedFont] = useState(FONTS[0].value)
+
+    const [selectedGradient, setSelectedGradient] = useState(GRADIENTS[0])
+
+    const [handle, setHandle] = useState('');
+
+    const ratioClass = useMemo(() => {
+        switch (ratio) {
+            case "landscape":
+                return "aspect-[16/9]"
+            case "portrait":
+                return "aspect-[9/16]"
+            default:
+                return "aspect-square"
+        }
+    }, [ratio])
+
+    const alignmentClass = useMemo(() => {
+        switch (alignment) {
+            case "left":
+                return "items-center justify-start text-left"
+            case "right":
+                return "items-center justify-end text-right"
+            default:
+                return "items-center justify-center text-center"
+        }
+    }, [alignment])
 
     useEffect(() => {
         const fetchStars = async () => {
@@ -31,8 +79,52 @@ const Dashboard = () => {
         fetchStars()
     }, [])
 
+    const cardRef = useRef<HTMLDivElement>(null)
+
+
+    const captureCard = async () => {
+        if (!cardRef.current) return null
+        return await toPng(cardRef.current, {
+            cacheBust: true,
+            pixelRatio: 3,
+        })
+    }
+
+    const handleDownload = async () => {
+        try {
+            setDownloading(true)
+            const dataUrl = await captureCard()
+            if (!dataUrl) return
+            const link = document.createElement("a")
+            link.download = "milestone-card.png"
+            link.href = dataUrl
+            link.click()
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Something went wrong please try again')
+        } finally {
+            setDownloading(false)
+        }
+    }
+
+    const handleCopy = async () => {
+        try {
+            setCopying(true)
+            const dataUrl = await captureCard()
+            if (!dataUrl) return
+            const res = await fetch(dataUrl)
+            const blob = await res.blob()
+            await navigator.clipboard.write([
+                new ClipboardItem({ "image/png": blob })
+            ])
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Something went wrong please try again')
+        } finally {
+            setCopying(false)
+        }
+    }
+
     return (
-        <div className="w-full h-screen">
+        <div className="w-full min-h-screen">
             <nav className="w-full flex items-center justify-between px-5 md:px-0 max-w-6xl mx-auto py-4" >
                 <Link href="/" className="flex items-center gap-2 group transition-all">
                     <div className="relative overflow-hidden rounded-lg group-hover:scale-110 transition-transform duration-200">
@@ -157,7 +249,7 @@ const Dashboard = () => {
 
                             <div className="space-y-2">
                                 <Label className="text-[13px] font-medium text-white/70">X Handle</Label>
-                                <input className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500/50" placeholder="@your_handle" />
+                                <input className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500/50" onChange={(e) => setHandle(e.target.value)} placeholder="@your_handle" />
                             </div>
 
                             <div className="space-y-2">
@@ -194,14 +286,6 @@ const Dashboard = () => {
                                     <Layout size={16} className="text-white/60" />
                                     <span className="text-xs font-bold uppercase tracking-wider text-white/60">Metrics</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <Label className="flex items-center gap-1 cursor-pointer">
-                                        <div className="w-7 h-4 bg-yellow-600 rounded-full relative"><div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full" /></div>
-                                    </Label>
-                                    <Label className="flex items-center gap-1 cursor-pointer">
-                                        <div className="w-7 h-4 bg-white/10 rounded-full relative"><div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white/40 rounded-full" /></div>
-                                    </Label>
-                                </div>
                             </div>
 
                             <div className="flex items-center gap-2 group">
@@ -221,34 +305,93 @@ const Dashboard = () => {
 
                     {/* Fixed Action Buttons (Pinned to bottom) */}
                     <div className="p-4 border-t border-white/5 bg-white/5 space-y-3">
-                        <Button className="w-full cursor-pointer py-5 from-primary-500 to-primary hover:opacity-90 text-black font-bold rounded-xl">
-                            Download image
+                        <Button
+                            onClick={handleDownload}
+                            className="w-full cursor-pointer py-5 from-primary-500 to-primary hover:opacity-90 text-black font-bold rounded-xl"
+                        >
+                            {
+                                downloading ? <>Downloading</> : "Download image"
+                            }
                         </Button>
-                        <Button variant="outline" className="w-full py-5 cursor-pointer rounded-xl border-white/10 bg-white/5 hover:bg-white/10">
-                            Copy
+                        <Button
+                            onClick={handleCopy}
+                            variant="outline"
+                            className="w-full py-5 cursor-pointer rounded-xl border-white/10 bg-white/5 hover:bg-white/10"
+                        >
+                            {
+                                copying ? "Copying" : 'Copy'
+                            }
                         </Button>
                     </div>
                 </div>
 
                 {/* Right Area */}
                 <div className="col-span-2 w-full flex flex-col gap-2">
-                    {/* Main Card Preview */}
-                    <div className="flex-1 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-2xl border border-white/10 w-full aspect-video bg-gradient-to-r from-purple-500 to-yellow-500">
-                        {/* Noise Overlay */}
-                        <div className="absolute inset-0 opacity-[0.15] pointer-events-none brightness-150 contrast-150"
-                            style={{ backgroundImage: `url('https://grainy-gradients.vercel.app/noise.svg')` }}></div>
+                    <div
+                        ref={cardRef}
+                        className={cn(
+                            "w-full overflow-hidden flex p-8 relative",
+                            ratioClass,
+                            alignmentClass
+                        )}
+                        style={{
+                            borderRadius,
+                            background: selectedGradient,
+                        }}
+                    >
+                        {noiseEnabled && (
+                            <div
+                                className="absolute inset-0 pointer-events-none"
+                                style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                                    backgroundSize: "200px 200px",
+                                    backgroundRepeat: "repeat",
+                                    opacity: 1.5,
+                                    mixBlendMode: "overlay",
+                                }}
+                            />
+                        )}
 
-                        {/* Content */}
-                        <div className="relative z-10 flex flex-col items-center text-[#1a1a1b]">
-                            <div className="flex items-center gap-1.5 text-[#00d486] font-bold text-xl mb-2">
-                                <TrendingUp size={22} strokeWidth={3} />
-                                <span>+900%</span>
-                            </div>
-                            <div className="flex items-center gap-4 text-6xl md:text-7xl font-extrabold tracking-tight">
-                                <Users size={60} strokeWidth={2.5} />
-                                <span>10 Followers</span>
-                            </div>
-                        </div>
+                        {active === "metrics" && (
+                            <>
+                                <div
+                                    className={cn(
+                                        "relative z-10 flex flex-col text-[#1a1a1b]",
+                                        alignment === "left" && "items-start",
+                                        alignment === "center" && "items-center",
+                                        alignment === "right" && "items-end"
+                                    )}
+                                    style={{ color: textColor, fontFamily: selectedFont }}
+                                >
+                                    <div className="flex items-center gap-1.5 font-bold text-xl mb-2">
+                                        <TrendingUp size={22} strokeWidth={3} />
+                                        <span>+900%</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 text-6xl md:text-7xl font-extrabold tracking-tight">
+                                        <Users size={60} strokeWidth={2.5} />
+                                        <span>10 Followers</span>
+                                    </div>
+                                </div>
+
+                                <p className="absolute right-6 bottom-6 z-10 font-semibold flex items-center gap-1"
+                                    style={{ color: textColor }}
+                                >
+                                    {
+                                        handle && <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+                                            <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
+                                        </svg>
+                                    }
+                                    {handle}
+                                </p>
+                            </>
+                        )}
                     </div>
 
                     {/* Preview Controls */}
@@ -257,15 +400,19 @@ const Dashboard = () => {
                         <div className="flex flex-col gap-3">
                             <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold px-1">Gradients</span>
                             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                                {[...Array(15)].map((_, i) => (
-                                    <div
+                                {GRADIENTS.map((item, i) => (
+                                    <button
                                         key={i}
-                                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 shrink-0 cursor-pointer hover:border-white/30 transition-colors"
+                                        onClick={() => setSelectedGradient(item)}
+                                        className={cn(
+                                            "w-10 h-10 rounded-full border shrink-0 cursor-pointer transition-all",
+                                            selectedGradient === item
+                                                ? "border-white/50 border-2"
+                                                : "border-white/10"
+                                        )}
+                                        style={{ background: item }}
                                     />
                                 ))}
-                                <div className="w-10 h-10 rounded-xl border border-dashed border-white/20 flex items-center justify-center shrink-0 text-[10px] text-white/40 bg-white/[0.02]">
-                                    +5
-                                </div>
                             </div>
                         </div>
 
@@ -274,8 +421,23 @@ const Dashboard = () => {
                             <div className="w-full flex items-center justify-between gap-6 flex-wrap">
                                 {/* Color Picker / Text Color */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Text</span>
-                                    <div className="w-10 h-10 rounded-xl bg-[#0f172a] border border-white/10 shrink-0 cursor-pointer shadow-inner" />
+                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">
+                                        Text
+                                    </span>
+
+                                    <label className="relative w-10 h-10 rounded-xl border border-white/10 shrink-0 cursor-pointer shadow-inner overflow-hidden">
+                                        <div
+                                            className="absolute inset-0 rounded-xl"
+                                            style={{ backgroundColor: textColor }}
+                                        />
+
+                                        <input
+                                            type="color"
+                                            value={textColor}
+                                            onChange={(e) => setTextColor(e.target.value)}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </label>
                                 </div>
 
                                 <span className="border-l border-white/20 h-6" />
@@ -283,49 +445,129 @@ const Dashboard = () => {
                                 {/* Font Selector */}
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Font</span>
-                                    <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/[0.08] cursor-pointer transition-all">
-                                        <span>Bricolage Style</span>
-                                        <ChevronDown size={14} className="opacity-40" />
-                                    </div>
+                                    <Select value={selectedFont} onValueChange={(val) => { if (val) setSelectedFont(val) }}>
+                                        <SelectTrigger className="bg-white/5 border-white/10 rounded-xl min-w-[160px] text-sm">
+                                            <SelectValue>
+                                                {FONTS.find(f => f.value === selectedFont)?.label ?? "Select font"}
+                                            </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {FONTS.map((f) => (
+                                                <SelectItem
+                                                    key={f.value}
+                                                    value={f.value}
+                                                    style={{ fontFamily: f.value }}
+                                                >
+                                                    {f.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 <span className="border-l border-white/20 h-6" />
 
                                 {/* Alignment Toggle */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Align</span>
+                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">
+                                        Align
+                                    </span>
+
                                     <div className="flex gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
-                                        <button className="p-2 opacity-30 hover:opacity-100 transition-opacity"><AlignLeft size={16} /></button>
-                                        <button className="p-2 bg-white/10 rounded-lg shadow-sm"><AlignCenter size={16} /></button>
-                                        <button className="p-2 opacity-30 hover:opacity-100 transition-opacity"><AlignRight size={16} /></button>
+                                        <button
+                                            onClick={() => setAlignment("left")}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-all cursor-pointer",
+                                                alignment === "left"
+                                                    ? "bg-white/10 opacity-100"
+                                                    : "opacity-30 hover:opacity-100"
+                                            )}
+                                        >
+                                            <AlignLeft size={16} />
+                                        </button>
+
+                                        <button
+                                            onClick={() => setAlignment("center")}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-all cursor-pointer",
+                                                alignment === "center"
+                                                    ? "bg-white/10 opacity-100"
+                                                    : "opacity-30 hover:opacity-100"
+                                            )}
+                                        >
+                                            <AlignCenter size={16} />
+                                        </button>
+
+                                        <button
+                                            onClick={() => setAlignment("right")}
+                                            className={cn(
+                                                "p-2 rounded-lg transition-all cursor-pointer",
+                                                alignment === "right"
+                                                    ? "bg-white/10 opacity-100"
+                                                    : "opacity-30 hover:opacity-100"
+                                            )}
+                                        >
+                                            <AlignRight size={16} />
+                                        </button>
                                     </div>
                                 </div>
 
                                 <span className="border-l border-white/20 h-6" />
 
-                                <Link href="https://www.buymeacoffee.com/yourusername" target="_blank">
-                                    <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
-                                        <ShuffleIcon />
-                                        <span>Randomize Style</span>
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-end justify-between gap-y-6">
-                            <div className="flex flex-col gap-2">
-                                <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Canvas Size</span>
-                                <div className="flex gap-1.5">
-                                    <Button variant="default" className="rounded-lg px-5 cursor-pointer">1:1</Button>
-                                    <Button variant="outline" className="rounded-lg px-5 cursor-pointer">1:2</Button>
-                                    <Button variant="outline" className="rounded-lg px-5 cursor-pointer">9:4</Button>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">
+                                        Noise
+                                    </span>
+                                    <div className="flex items-center gap-2 group">
+                                        <Switch
+                                            id="airplane-mode"
+                                            checked={noiseEnabled}
+                                            onCheckedChange={setNoiseEnabled}
+                                            className="cursor-pointer"
+                                        />
+                                    </div>
                                 </div>
+                            </div>
+                            <div className="flex flex-wrap items-end justify-between gap-6">
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Canvas Size</span>
+                                    <div className="flex gap-1.5">
+                                        <Button
+                                            onClick={() => setRatio("square")}
+                                            variant={ratio === "square" ? "default" : "outline"}
+                                            className="rounded-lg px-5 cursor-pointer"
+                                        >
+                                            1:1
+                                        </Button>
+
+                                        <Button
+                                            onClick={() => setRatio("landscape")}
+                                            variant={ratio === "landscape" ? "default" : "outline"}
+                                            className="rounded-lg px-5 cursor-pointer"
+                                        >
+                                            16:9
+                                        </Button>
+
+                                        <Button
+                                            onClick={() => setRatio("portrait")}
+                                            variant={ratio === "portrait" ? "default" : "outline"}
+                                            className="rounded-lg px-5 cursor-pointer"
+                                        >
+                                            9:16
+                                        </Button>
+                                    </div>
+                                </div>
+                                <span className="border-l border-white/20 h-6" />
+                                <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
+                                    <ShuffleIcon />
+                                    <span>Randomize Style</span>
+                                </Button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
