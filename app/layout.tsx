@@ -102,16 +102,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className={`min-h-screen w-full bg-background text-foreground font-sans antialiased ${roboto.variable} ${inter.variable} ${playfair.variable} ${spaceGrotesk.variable} ${syne.variable} ${dmSans.variable}`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Toaster />
-          {children}
-          <Analytics />
-        </ThemeProvider>
+        <Toaster />
+        {children}
+        <Analytics />
       </body>
     </html>
   );
