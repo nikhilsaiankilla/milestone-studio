@@ -3,11 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "./ui/button"
-import { ThemeSwitch } from "./theme-switch"
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react"
 import { useEffect, useMemo, useState } from "react"
 import { AlignCenter, AlignLeft, AlignRight, ChevronDown, GripVertical, IdCard, Layout, Plus, Shuffle, ShuffleIcon, TrendingUp, Users, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { FONTS, GRADIENTS, TEMPLATES } from "@/types/card"
+import { FONTS, GRADIENTS, PLATFORMS, PlatformType, TEMPLATES } from "@/types/card"
 import { Separator } from "./ui/separator"
 import { Label } from "./ui/label"
 import { Switch } from "./ui/switch"
@@ -41,6 +41,11 @@ const Dashboard = () => {
     const [selectedGradient, setSelectedGradient] = useState(GRADIENTS[0])
 
     const [handle, setHandle] = useState('');
+    const [platform, setPlatform] = useState<PlatformType | null>(PLATFORMS[0])
+
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null)
+    const [emojiCount, setEmojiCount] = useState(6)
 
     const ratioClass = useMemo(() => {
         switch (ratio) {
@@ -123,9 +128,27 @@ const Dashboard = () => {
         }
     }
 
+    const emojiPositions = useMemo(() => {
+        if (!selectedEmoji) return []
+
+        // Fixed natural positions mimicking the reference — edges & corners
+        const slots = [
+            { x: 5, y: 30, size: 52, opacity: 0.95, rotation: -15 },  // left middle - large
+            { x: 72, y: 4, size: 38, opacity: 0.90, rotation: 20 },  // top right - large
+            { x: 78, y: 68, size: 30, opacity: 0.85, rotation: -10 },  // bottom right - medium
+            { x: 55, y: 15, size: 14, opacity: 0.35, rotation: 25 },  // top center - tiny faded
+            { x: 62, y: 55, size: 12, opacity: 0.30, rotation: 10 },  // center right - tiny faded
+            { x: 20, y: 72, size: 16, opacity: 0.30, rotation: -20 },  // bottom left - tiny faded
+            { x: 40, y: 8, size: 11, opacity: 0.25, rotation: 15 },  // top center left - tiny
+            { x: 85, y: 40, size: 13, opacity: 0.28, rotation: -5 },  // right middle - tiny
+        ]
+
+        return slots.slice(0, emojiCount).map((s, i) => ({ id: i, ...s }))
+    }, [selectedEmoji, emojiCount])
+    
     return (
-        <div className="w-full min-h-screen">
-            <nav className="w-full flex items-center justify-between px-5 md:px-0 max-w-6xl mx-auto py-4" >
+        <div className="w-full h-screen overflow-hidden flex flex-col">
+            <nav className="bg-card w-full border-b-2 border-white/10 flex items-center justify-between px-5 py-4 shrink-0" >
                 <Link href="/" className="flex items-center gap-2 group transition-all">
                     <div className="relative overflow-hidden rounded-lg group-hover:scale-110 transition-transform duration-200">
                         <Image
@@ -140,10 +163,7 @@ const Dashboard = () => {
                         Milestore Studio
                     </h1>
                 </Link>
-
                 <div className="flex items-center justify-center gap-3">
-                    <ThemeSwitch />
-
                     {/* GitHub Button */}
                     <Link href="https://github.com/nikhilsaiankilla/milestone-studio" target="_blank">
                         <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
@@ -204,12 +224,11 @@ const Dashboard = () => {
                 </div>
             </nav >
 
-            <div className="px-5 md:px-0 max-w-6xl mx-auto w-full h-[calc(100vh-160px)] mt-5 grid grid-cols-3 gap-3">
+            <div className="w-full flex justify-between overflow-hidden">
                 {/* --- LEFT CONTAINER FIX --- */}
-                <div className="bg-card rounded-2xl col-span-1 border-2 border-white/10 flex flex-col overflow-hidden h-full">
-
+                <div className="bg-card w-[360px] border-r-2 border-white/10 flex flex-col h-full">
                     {/* Scrollable Content Area */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scroll">
                         {/* Templates */}
                         <section>
                             <div className="w-full flex items-center gap-2 mb-4">
@@ -247,9 +266,46 @@ const Dashboard = () => {
                                 <h2 className="text-sm font-semibold text-secondary-foreground">Main Info</h2>
                             </div>
 
+                            <div className="flex gap-2 flex-wrap">
+                                {PLATFORMS.map((p) => {
+                                    const isActive = platform?.value === p.value
+
+                                    return (
+                                        <button
+                                            key={p.value}
+                                            onClick={() => setPlatform(p)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-all
+                                                ${isActive
+                                                    ? "bg-yellow-500 text-black border-yellow-500"
+                                                    : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
+                                                }`}
+                                        >
+                                            <span className={`${isActive ? "text-black" : "text-white/60"}`}>
+                                                {p.icon}
+                                            </span>
+                                            {p.label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+
                             <div className="space-y-2">
-                                <Label className="text-[13px] font-medium text-white/70">X Handle</Label>
-                                <input className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500/50" onChange={(e) => setHandle(e.target.value)} placeholder="@your_handle" />
+                                <Label className="text-[13px] font-medium text-white/70">
+                                    {platform?.label} Handle
+                                </Label>
+
+                                <div className="flex items-center gap-2 bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 focus-within:border-yellow-500/50">
+                                    <span className="text-white/60">
+                                        {platform?.icon}
+                                    </span>
+
+                                    <input
+                                        value={handle}
+                                        onChange={(e) => setHandle(e.target.value)}
+                                        placeholder={platform?.placeholder}
+                                        className="w-full bg-transparent text-sm focus:outline-none"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -301,10 +357,85 @@ const Dashboard = () => {
                                 <Plus size={14} /> Add metric
                             </button>
                         </section>
+
+                        <Separator className="opacity-50" />
+
+                        <section className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-base">✨</span>
+                                    <span className="text-xs font-bold uppercase tracking-wider text-white/60">Emoji Scatter</span>
+                                </div>
+                                {selectedEmoji && (
+                                    <button
+                                        onClick={() => setSelectedEmoji(null)}
+                                        className="text-white/30 hover:text-white/60 transition-all"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                className={cn(
+                                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-all",
+                                    showEmojiPicker
+                                        ? "border-yellow-500/50 bg-yellow-500/5 text-white"
+                                        : "border-white/10 bg-[#1a1a1a] text-white/50 hover:text-white/80"
+                                )}
+                            >
+                                <span className="flex items-center gap-2">
+                                    {selectedEmoji
+                                        ? <><span className="text-xl">{selectedEmoji}</span><span className="text-white/60 text-xs">Selected</span></>
+                                        : <span>Choose an emoji</span>
+                                    }
+                                </span>
+                                <ChevronDown size={14} className={cn("transition-transform", showEmojiPicker && "rotate-180")} />
+                            </button>
+
+                            {showEmojiPicker && (
+                                <div className="w-full">
+                                    <EmojiPicker
+                                        theme={Theme.DARK}
+                                        onEmojiClick={(emojiData: EmojiClickData) => {
+                                            setSelectedEmoji(emojiData.emoji)
+                                            setShowEmojiPicker(false)
+                                        }}
+                                        width="100%"
+                                        height={350}
+                                        previewConfig={{ showPreview: false }}
+                                        skinTonesDisabled
+                                    />
+                                </div>
+                            )}
+
+                            {selectedEmoji && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] text-white/40 font-medium">Count</span>
+                                        <span className="text-[11px] text-white/60 font-bold">{emojiCount}</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min={2}
+                                        max={20}
+                                        value={emojiCount}
+                                        onChange={(e) => setEmojiCount(Number(e.target.value))}
+                                        className="w-full accent-yellow-500 cursor-pointer"
+                                    />
+                                    <div className="flex justify-between text-[9px] text-white/20 font-medium">
+                                        <span>Minimal</span>
+                                        <span>Dense</span>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+
                     </div>
 
                     {/* Fixed Action Buttons (Pinned to bottom) */}
-                    <div className="p-4 border-t border-white/5 bg-white/5 space-y-3">
+                    <div className="shrink-0 p-4 border-t border-white/5 bg-white/5 space-y-3">
                         <Button
                             onClick={handleDownload}
                             className="w-full cursor-pointer py-5 from-primary-500 to-primary hover:opacity-90 text-black font-bold rounded-xl"
@@ -325,245 +456,243 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Right Area */}
-                <div className="col-span-2 w-full flex flex-col gap-2">
-                    <div
-                        ref={cardRef}
-                        className={cn(
-                            "w-full overflow-hidden flex p-8 relative",
-                            ratioClass,
-                            alignmentClass
-                        )}
-                        style={{
-                            borderRadius,
-                            background: selectedGradient,
-                        }}
-                    >
-                        {noiseEnabled && (
-                            <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                                    backgroundSize: "200px 200px",
-                                    backgroundRepeat: "repeat",
-                                    opacity: 1.5,
-                                    mixBlendMode: "overlay",
-                                }}
-                            />
-                        )}
-
-                        {active === "metrics" && (
-                            <>
+                {/* CENTER CONTAINER  */}
+                <div className="flex-1 min-w-0 overflow-y-auto p-10">
+                    <div className="w-full max-w-2xl! flex flex-col gap-2 mx-auto">
+                        <div
+                            ref={cardRef}
+                            className={cn(
+                                "w-full overflow-hidden flex p-8 relative",
+                                ratioClass,
+                                alignmentClass
+                            )}
+                            style={{
+                                borderRadius,
+                                background: selectedGradient,
+                            }}
+                        >
+                            {noiseEnabled && (
                                 <div
-                                    className={cn(
-                                        "relative z-10 flex flex-col text-[#1a1a1b]",
-                                        alignment === "left" && "items-start",
-                                        alignment === "center" && "items-center",
-                                        alignment === "right" && "items-end"
-                                    )}
-                                    style={{ color: textColor, fontFamily: selectedFont }}
+                                    className="absolute inset-0 pointer-events-none"
+                                    style={{
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                                        backgroundSize: "200px 200px",
+                                        backgroundRepeat: "repeat",
+                                        opacity: 1.5,
+                                        mixBlendMode: "overlay",
+                                    }}
+                                />
+                            )}
+
+                            {selectedEmoji && emojiPositions.map((e) => (
+                                <span
+                                    key={e.id}
+                                    className="absolute pointer-events-none select-none z-[5]"
+                                    style={{
+                                        left: `${e.x}%`,
+                                        top: `${e.y}%`,
+                                        fontSize: `${e.size}px`,
+                                        transform: `rotate(${e.rotation}deg)`,
+                                        opacity: e.opacity,
+                                    }}
                                 >
-                                    <div className="flex items-center gap-1.5 font-bold text-xl mb-2">
-                                        <TrendingUp size={22} strokeWidth={3} />
-                                        <span>+900%</span>
+                                    {selectedEmoji}
+                                </span>
+                            ))}
+
+                            {active === "metrics" && (
+                                <>
+                                    <div
+                                        className={cn(
+                                            "relative z-10 flex flex-col text-[#1a1a1b]",
+                                            alignment === "left" && "items-start",
+                                            alignment === "center" && "items-center",
+                                            alignment === "right" && "items-end"
+                                        )}
+                                        style={{ color: textColor, fontFamily: selectedFont }}
+                                    >
+                                        <div className="flex items-center gap-1.5 font-bold text-xl mb-2">
+                                            <TrendingUp size={22} strokeWidth={3} />
+                                            <span>+900%</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-4 text-6xl md:text-7xl font-extrabold tracking-tight">
+                                            <Users size={60} strokeWidth={2.5} />
+                                            <span>10 Followers</span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4 text-6xl md:text-7xl font-extrabold tracking-tight">
-                                        <Users size={60} strokeWidth={2.5} />
-                                        <span>10 Followers</span>
-                                    </div>
-                                </div>
-
-                                <p className="absolute right-6 bottom-6 z-10 font-semibold flex items-center gap-1"
-                                    style={{ color: textColor }}
-                                >
-                                    {
-                                        handle && <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="currentColor"
-                                        >
-                                            <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
-                                        </svg>
-                                    }
-                                    {handle}
-                                </p>
-                            </>
-                        )}
+                                    <p className="absolute right-6 bottom-6 z-10 font-semibold flex items-center gap-1"
+                                        style={{ color: textColor }}
+                                    >
+                                        {
+                                            handle && platform?.icon
+                                        }
+                                        {handle}
+                                    </p>
+                                </>
+                            )}
+                        </div>
                     </div>
+                </div>
 
-                    {/* Preview Controls */}
-                    <div className="space-y-3">
-                        {/* Gradient Presets */}
-                        <div className="flex flex-col gap-3">
-                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold px-1">Gradients</span>
-                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                {/* RIGHT CONTAINER */}
+                <div className="bg-card w-[360px] shrink-0 border-l-2 border-white/10 flex flex-col h-full">
+
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 w-full overflow-y-auto p-4 space-y-5 custom-scroll">
+
+                        {/* Gradients */}
+                        <section className="space-y-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Gradients</span>
+                            <div className="grid grid-cols-4 gap-2">
                                 {GRADIENTS.map((item, i) => (
                                     <button
                                         key={i}
                                         onClick={() => setSelectedGradient(item)}
                                         className={cn(
-                                            "w-10 h-10 rounded-full border shrink-0 cursor-pointer transition-all",
+                                            "w-full aspect-square rounded-lg border cursor-pointer transition-all",
                                             selectedGradient === item
-                                                ? "border-white/50 border-2"
-                                                : "border-white/10"
+                                                ? "border-2 border-white/60 scale-95"
+                                                : "border-white/10 hover:border-white/30"
                                         )}
                                         style={{ background: item }}
                                     />
                                 ))}
                             </div>
-                        </div>
+                        </section>
 
-                        {/* Controls Row */}
-                        <div className="w-full flex flex-wrap items-end justify-between gap-y-6">
-                            <div className="w-full flex items-center justify-between gap-6 flex-wrap">
-                                {/* Color Picker / Text Color */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">
-                                        Text
-                                    </span>
+                        <Separator className="opacity-20" />
 
-                                    <label className="relative w-10 h-10 rounded-xl border border-white/10 shrink-0 cursor-pointer shadow-inner overflow-hidden">
-                                        <div
-                                            className="absolute inset-0 rounded-xl"
-                                            style={{ backgroundColor: textColor }}
-                                        />
+                        {/* Text Color */}
+                        <section className="space-y-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Text Color</span>
+                            <label className="relative w-full h-14 rounded-xl border border-white/10 cursor-pointer overflow-hidden flex items-center px-3 gap-3">
+                                <div
+                                    className="w-8 h-8 rounded-lg border border-white/20 shrink-0"
+                                    style={{ backgroundColor: textColor }}
+                                />
+                                <span className="text-sm font-mono text-white/60">{textColor}</span>
+                                <input
+                                    type="color"
+                                    value={textColor}
+                                    onChange={(e) => setTextColor(e.target.value)}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                            </label>
+                        </section>
 
-                                        <input
-                                            type="color"
-                                            value={textColor}
-                                            onChange={(e) => setTextColor(e.target.value)}
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                        />
-                                    </label>
-                                </div>
+                        <Separator className="opacity-20" />
 
-                                <span className="border-l border-white/20 h-6" />
+                        {/* Font */}
+                        <section className="space-y-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Font</span>
+                            <Select value={selectedFont} onValueChange={(val) => { if (val) setSelectedFont(val) }}>
+                                <SelectTrigger className="bg-white/5 border-white/10 rounded-xl text-sm w-full">
+                                    <SelectValue>
+                                        {FONTS.find(f => f.value === selectedFont)?.label ?? "Select font"}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {FONTS.map((f) => (
+                                        <SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                                            {f.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </section>
 
-                                {/* Font Selector */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Font</span>
-                                    <Select value={selectedFont} onValueChange={(val) => { if (val) setSelectedFont(val) }}>
-                                        <SelectTrigger className="bg-white/5 border-white/10 rounded-xl min-w-[160px] text-sm">
-                                            <SelectValue>
-                                                {FONTS.find(f => f.value === selectedFont)?.label ?? "Select font"}
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {FONTS.map((f) => (
-                                                <SelectItem
-                                                    key={f.value}
-                                                    value={f.value}
-                                                    style={{ fontFamily: f.value }}
-                                                >
-                                                    {f.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                        <Separator className="opacity-20" />
 
-                                <span className="border-l border-white/20 h-6" />
-
-                                {/* Alignment Toggle */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">
-                                        Align
-                                    </span>
-
-                                    <div className="flex gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
-                                        <button
-                                            onClick={() => setAlignment("left")}
-                                            className={cn(
-                                                "p-2 rounded-lg transition-all cursor-pointer",
-                                                alignment === "left"
-                                                    ? "bg-white/10 opacity-100"
-                                                    : "opacity-30 hover:opacity-100"
-                                            )}
-                                        >
-                                            <AlignLeft size={16} />
-                                        </button>
-
-                                        <button
-                                            onClick={() => setAlignment("center")}
-                                            className={cn(
-                                                "p-2 rounded-lg transition-all cursor-pointer",
-                                                alignment === "center"
-                                                    ? "bg-white/10 opacity-100"
-                                                    : "opacity-30 hover:opacity-100"
-                                            )}
-                                        >
-                                            <AlignCenter size={16} />
-                                        </button>
-
-                                        <button
-                                            onClick={() => setAlignment("right")}
-                                            className={cn(
-                                                "p-2 rounded-lg transition-all cursor-pointer",
-                                                alignment === "right"
-                                                    ? "bg-white/10 opacity-100"
-                                                    : "opacity-30 hover:opacity-100"
-                                            )}
-                                        >
-                                            <AlignRight size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <span className="border-l border-white/20 h-6" />
-
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">
-                                        Noise
-                                    </span>
-                                    <div className="flex items-center gap-2 group">
-                                        <Switch
-                                            id="airplane-mode"
-                                            checked={noiseEnabled}
-                                            onCheckedChange={setNoiseEnabled}
-                                            className="cursor-pointer"
-                                        />
-                                    </div>
-                                </div>
+                        {/* Alignment */}
+                        <section className="space-y-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Alignment</span>
+                            <div className="w-full grid grid-cols-3 gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
+                                {(["left", "center", "right"] as const).map((a) => (
+                                    <button
+                                        key={a}
+                                        onClick={() => setAlignment(a)}
+                                        className={cn(
+                                            "flex items-center justify-center py-2 rounded-lg transition-all cursor-pointer",
+                                            alignment === a ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
+                                        )}
+                                    >
+                                        {a === "left" && <AlignLeft size={15} />}
+                                        {a === "center" && <AlignCenter size={15} />}
+                                        {a === "right" && <AlignRight size={15} />}
+                                    </button>
+                                ))}
                             </div>
-                            <div className="flex flex-wrap items-end justify-between gap-6">
-                                <div className="flex flex-col gap-2">
-                                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Canvas Size</span>
-                                    <div className="flex gap-1.5">
-                                        <Button
-                                            onClick={() => setRatio("square")}
-                                            variant={ratio === "square" ? "default" : "outline"}
-                                            className="rounded-lg px-5 cursor-pointer"
-                                        >
-                                            1:1
-                                        </Button>
+                        </section>
 
-                                        <Button
-                                            onClick={() => setRatio("landscape")}
-                                            variant={ratio === "landscape" ? "default" : "outline"}
-                                            className="rounded-lg px-5 cursor-pointer"
-                                        >
-                                            16:9
-                                        </Button>
+                        <Separator className="opacity-20" />
 
-                                        <Button
-                                            onClick={() => setRatio("portrait")}
-                                            variant={ratio === "portrait" ? "default" : "outline"}
-                                            className="rounded-lg px-5 cursor-pointer"
-                                        >
-                                            9:16
-                                        </Button>
-                                    </div>
-                                </div>
-                                <span className="border-l border-white/20 h-6" />
-                                <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
-                                    <ShuffleIcon />
-                                    <span>Randomize Style</span>
+                        {/* Noise */}
+                        <section>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Noise</span>
+                                <Switch
+                                    checked={noiseEnabled}
+                                    onCheckedChange={setNoiseEnabled}
+                                    className="cursor-pointer"
+                                />
+                            </div>
+                        </section>
+
+                    </div>
+
+                    {/* Pinned Bottom */}
+                    <div className="shrink-0 p-4 border-t border-white/5 bg-white/5 space-y-3">
+
+                        {/* Canvas Size */}
+                        <div className="space-y-2">
+                            <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Canvas Size</span>
+                            <div className="w-full grid grid-cols-3 gap-1.5">
+                                <Button
+                                    onClick={() => setRatio("square")}
+                                    variant="ghost"
+                                    className={cn(
+                                        "flex flex-col items-center gap-1.5 h-auto py-3 rounded-lg cursor-pointer border transition-all",
+                                        ratio === "square" ? "border-yellow-500 bg-yellow-500/10 text-yellow-400" : "border-white/10 text-white/40 hover:text-white/60"
+                                    )}
+                                >
+                                    <div className={cn("w-6 h-6 rounded-sm border-2", ratio === "square" ? "border-yellow-400" : "border-current")} />
+                                    <span className="text-[10px] font-bold">1:1</span>
+                                </Button>
+
+                                <Button
+                                    onClick={() => setRatio("landscape")}
+                                    variant="ghost"
+                                    className={cn(
+                                        "flex flex-col items-center gap-1.5 h-auto py-3 rounded-lg cursor-pointer border transition-all",
+                                        ratio === "landscape" ? "border-yellow-500 bg-yellow-500/10 text-yellow-400" : "border-white/10 text-white/40 hover:text-white/60"
+                                    )}
+                                >
+                                    <div className={cn("w-8 h-[18px] rounded-sm border-2", ratio === "landscape" ? "border-yellow-400" : "border-current")} />
+                                    <span className="text-[10px] font-bold">16:9</span>
+                                </Button>
+
+                                <Button
+                                    onClick={() => setRatio("portrait")}
+                                    variant="ghost"
+                                    className={cn(
+                                        "flex flex-col items-center gap-1.5 h-auto py-3 rounded-lg cursor-pointer border transition-all",
+                                        ratio === "portrait" ? "border-yellow-500 bg-yellow-500/10 text-yellow-400" : "border-white/10 text-white/40 hover:text-white/60"
+                                    )}
+                                >
+                                    <div className={cn("w-[18px] h-8 rounded-sm border-2", ratio === "portrait" ? "border-yellow-400" : "border-current")} />
+                                    <span className="text-[10px] font-bold">9:16</span>
                                 </Button>
                             </div>
                         </div>
+
+                        {/* Randomize */}
+                        <Button className="w-full cursor-pointer" variant="outline">
+                            <ShuffleIcon size={14} />
+                            <span>Randomize Style</span>
+                        </Button>
+
                     </div>
                 </div>
             </div>
@@ -572,3 +701,4 @@ const Dashboard = () => {
 }
 
 export default Dashboard
+
