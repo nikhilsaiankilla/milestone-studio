@@ -1,4 +1,22 @@
+import { Eye, Heart, MessageCircle, Share2, Star, TrendingUp, Users } from "lucide-react";
 import React from "react";
+
+export type Metric = { id: string; value: string; label: string; icon: string }
+export type EmojiPosition = { id: number; x: number; y: number; size: number; opacity: number; rotation: number }
+
+const METRIC_ICONS = {
+    users: Users,
+    growth: TrendingUp,
+    likes: Heart,
+    views: Eye,
+    comments: MessageCircle,
+    shares: Share2,
+    stars: Star
+} as const
+
+export type MetricIconKey = keyof typeof METRIC_ICONS
+
+export { METRIC_ICONS }  // move METRIC_ICONS here from Dashboard
 
 export const TEMPLATES = [
     {
