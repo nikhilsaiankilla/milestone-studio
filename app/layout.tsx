@@ -101,7 +101,17 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
     >
-      <body className={`min-h-screen w-full bg-background text-foreground font-sans antialiased ${roboto.variable} ${inter.variable} ${playfair.variable} ${spaceGrotesk.variable} ${syne.variable} ${dmSans.variable}`}>
+      <body
+        className={`min-h-screen w-full bg-background text-foreground font-sans antialiased 
+          ${roboto.variable} 
+          ${inter.variable} 
+          ${playfair.variable} 
+          ${spaceGrotesk.variable} 
+          ${syne.variable} 
+          ${dmSans.variable}`
+        }
+        suppressHydrationWarning
+      >
         <Toaster />
         {children}
         <Analytics />

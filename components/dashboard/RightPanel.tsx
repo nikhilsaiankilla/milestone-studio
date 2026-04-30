@@ -12,14 +12,11 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { FONTS, GRADIENT_CATEGORIES } from '@/types/card'
+import Product from '../product'
 
 interface RightPanelProps {
     selectedGradient: string
     setSelectedGradient: (g: string) => void
-    textColor: string
-    setTextColor: (c: string) => void
-    selectedFont: string
-    setSelectedFont: (f: string) => void
     alignment: 'left' | 'center' | 'right'
     setAlignment: (a: 'left' | 'center' | 'right') => void
     noiseEnabled: boolean
@@ -31,8 +28,6 @@ interface RightPanelProps {
 
 export default function RightPanel({
     selectedGradient, setSelectedGradient,
-    textColor, setTextColor,
-    selectedFont, setSelectedFont,
     alignment, setAlignment,
     noiseEnabled, setNoiseEnabled,
     ratio, setRatio,
@@ -40,9 +35,12 @@ export default function RightPanel({
 }: RightPanelProps) {
     return (
         <div className="bg-card w-[360px] shrink-0 border-l-2 border-white/10 flex flex-col h-full">
-
             {/* Scrollable area */}
             <div className="flex-1 w-full overflow-y-auto p-4 space-y-5 custom-scroll">
+                <Product />
+
+                <Separator className="opacity-50" />
+
                 {/* Noise */}
                 <section>
                     <div className="flex items-center justify-between">
@@ -52,6 +50,28 @@ export default function RightPanel({
                             onCheckedChange={setNoiseEnabled}
                             className="cursor-pointer"
                         />
+                    </div>
+                </section>
+                <Separator className="opacity-20" />
+
+                {/* Alignment */}
+                <section className="space-y-2">
+                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Alignment</span>
+                    <div className="w-full grid grid-cols-3 gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
+                        {(['left', 'center', 'right'] as const).map((a) => (
+                            <button
+                                key={a}
+                                onClick={() => setAlignment(a)}
+                                className={cn(
+                                    'flex items-center justify-center py-2 rounded-lg transition-all cursor-pointer',
+                                    alignment === a ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
+                                )}
+                            >
+                                {a === 'left' && <AlignLeft size={15} />}
+                                {a === 'center' && <AlignCenter size={15} />}
+                                {a === 'right' && <AlignRight size={15} />}
+                            </button>
+                        ))}
                     </div>
                 </section>
 
@@ -90,70 +110,6 @@ export default function RightPanel({
                         </section>
                     ))}
                 </div>
-
-                <Separator className="opacity-20" />
-
-                {/* Text Color */}
-                <section className="space-y-2">
-                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Text Color</span>
-                    <label className="relative w-full h-14 rounded-xl border border-white/10 cursor-pointer overflow-hidden flex items-center px-3 gap-3">
-                        <div
-                            className="w-8 h-8 rounded-lg border border-white/20 shrink-0"
-                            style={{ backgroundColor: textColor }}
-                        />
-                        <span className="text-sm font-mono text-white/60">{textColor}</span>
-                        <input
-                            type="color"
-                            value={textColor}
-                            onChange={(e) => setTextColor(e.target.value)}
-                            className="absolute inset-0 opacity-0 cursor-pointer"
-                        />
-                    </label>
-                </section>
-
-                <Separator className="opacity-20" />
-
-                {/* Font */}
-                <section className="space-y-2">
-                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Font</span>
-                    <Select value={selectedFont} onValueChange={(val) => { if (val) setSelectedFont(val) }}>
-                        <SelectTrigger className="bg-white/5 border-white/10 rounded-xl text-sm w-full">
-                            <SelectValue>
-                                {FONTS.find(f => f.value === selectedFont)?.label ?? 'Select font'}
-                            </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                            {FONTS.map((f) => (
-                                <SelectItem key={f.value} value={f.value} style={{ fontFamily: f.value }}>
-                                    {f.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </section>
-
-                <Separator className="opacity-20" />
-
-                {/* Alignment */}
-                <section className="space-y-2">
-                    <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Alignment</span>
-                    <div className="w-full grid grid-cols-3 gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
-                        {(['left', 'center', 'right'] as const).map((a) => (
-                            <button
-                                key={a}
-                                onClick={() => setAlignment(a)}
-                                className={cn(
-                                    'flex items-center justify-center py-2 rounded-lg transition-all cursor-pointer',
-                                    alignment === a ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/60'
-                                )}
-                            >
-                                {a === 'left' && <AlignLeft size={15} />}
-                                {a === 'center' && <AlignCenter size={15} />}
-                                {a === 'right' && <AlignRight size={15} />}
-                            </button>
-                        ))}
-                    </div>
-                </section>
             </div>
 
             {/* Pinned bottom — canvas size + randomize */}

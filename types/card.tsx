@@ -1,8 +1,43 @@
 import { Eye, Heart, MessageCircle, Share2, Star, TrendingUp, Users } from "lucide-react";
 import React from "react";
 
-export type Metric = { id: string; value: string; label: string; icon: string }
 export type EmojiPosition = { id: number; x: number; y: number; size: number; opacity: number; rotation: number }
+
+export interface MetricStyle {
+    showIcon: boolean
+    iconSize: number        // 16–64
+    valueSize: number       // 24–96
+    valueBold: boolean
+    valueItalic: boolean
+    labelSize: number       // 10–24
+    labelBold: boolean
+    labelItalic: boolean
+    fontFamily: string
+    textColor: string
+}
+
+export const DEFAULT_METRIC_STYLE: MetricStyle = {
+    showIcon: true,
+    iconSize: 40,
+    valueSize: 48,
+    valueBold: true,
+    valueItalic: false,
+    labelSize: 12,
+    labelBold: false,
+    labelItalic: false,
+    fontFamily: "var(--font-inter)",
+    textColor: "#ffffff",
+}
+
+// Update Metric type to include style
+export type Metric = {
+    showIcon: boolean,
+    id: string
+    value: string
+    label: string
+    icon: string
+    style: MetricStyle
+}
 
 const METRIC_ICONS = {
     users: Users,
@@ -153,6 +188,15 @@ export const ICONS = {
             <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
         </svg>
     ),
+    medium: (
+        <svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <rect width="512" height="512" rx="100" fill="black" />
+
+            <path d="M94.1 394.2V121.8h21.1l111.4 199.1 111.4-199.1h21.1v272.4h-26.6v-224l-95.2 170.8h-21.1L120.7 170.2v224H94.1z" fill="white" />
+
+            <path d="M414.7 274.6c0-54.8 38.6-102.1 97.3-102.1 55.4 0 91.9 41.2 91.9 101.5 0 5.1-.3 10.5-.9 15.6H440.3c3.6 42.1 33.1 63.8 68.6 63.8 24.1 0 45.4-9.6 59.9-24.7l17.7 17.1c-19.8 24.7-50.5 37.2-83.9 37.2-56.9-.1-87.9-46.6-87.9-108.4zm162.8-19.5c-2.4-38.1-26.2-58.2-65.5-58.2-36.4 0-61.9 22.8-68.9 58.2h134.4z" fill="white" />
+        </svg>
+    )
 }
 
 export interface PlatformType {
@@ -169,4 +213,5 @@ export const PLATFORMS: PlatformType[] = [
     { label: "YouTube", value: "youtube", placeholder: "@channel", icon: ICONS.youtube },
     { label: "Product Hunt", value: "producthunt", placeholder: "@username", icon: ICONS.producthunt },
     { label: "GitHub", value: "github", placeholder: "@username", icon: ICONS.github },
+    { label: "Medium", value: "medium", placeholder: "@username", icon: ICONS.medium },
 ]

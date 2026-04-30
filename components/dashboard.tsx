@@ -1,17 +1,15 @@
 'use client'
 
 import { useExport } from "@/hooks/useExport"
-import { FONTS, GRADIENT_CATEGORIES, Metric, PLATFORMS, PlatformType } from "@/types/card"
-import Image from "next/image"
-import Link from "next/link"
+import { GRADIENT_CATEGORIES, Metric, PLATFORMS, PlatformType } from "@/types/card"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Kbd, KbdGroup } from "./ui/kbd"
-import { Button } from "./ui/button"
 import LeftPanel from "./dashboard/LeftPanel"
 import CardCanvas from "./dashboard/CardCanvas"
 import RightPanel from "./dashboard/RightPanel"
 import { useSupportPrompt } from "@/hooks/useSupportPrompt"
 import { SupportDialog } from "./SupportDialog"
+import DashboardNav from "./dashboard/DashboardNav"
+import { DEFAULT_METRIC_STYLE } from '@/types/card'
 
 /**
  * Dashboard.tsx
@@ -20,6 +18,7 @@ import { SupportDialog } from "./SupportDialog"
  */
 
 const Dashboard = () => {
+
     const [stars, setStars] = useState<number | null>(null)
 
     useEffect(() => {
@@ -36,14 +35,32 @@ const Dashboard = () => {
     const [platform, setPlatform] = useState<PlatformType | null>(PLATFORMS[0])
     const [handle, setHandle] = useState('')
 
+    // Inside Dashboard component
+    const [progressType, setProgressType] = useState<'bar' | 'circle'>('bar');
+
     // Metrics
     const [metrics, setMetrics] = useState<Metric[]>([
-        { id: crypto.randomUUID(), value: '0', label: 'Followers', icon: 'users' }
+        {
+            id: crypto.randomUUID(),
+            value: '0',
+            label: 'Followers',
+            icon: 'users',
+            style: DEFAULT_METRIC_STYLE,
+            showIcon: true,
+        }
     ])
+
     const [activeMetricIndex, setActiveMetricIndex] = useState(0)
 
     const handleAddMetric = () => {
-        setMetrics(prev => [...prev, { id: crypto.randomUUID(), value: '0', label: 'Metric', icon: 'users' }])
+        setMetrics(prev => [...prev, {
+            id: crypto.randomUUID(),
+            value: '0',
+            label: 'Metric',
+            icon: 'users',
+            style: DEFAULT_METRIC_STYLE,
+            showIcon: true,
+        }])
         setActiveMetricIndex(metrics.length)
     }
 
@@ -60,14 +77,12 @@ const Dashboard = () => {
         setMetrics(prev => prev.map((m, i) => i === index ? { ...m, ...data } : m))
     }
 
-    // Visual state
-    const [textColor, setTextColor] = useState('#0f172a')
     const [borderRadius] = useState(5)
     const [noiseEnabled, setNoiseEnabled] = useState(true)
     const [alignment, setAlignment] = useState<'left' | 'center' | 'right'>('center')
     const [ratio, setRatio] = useState<'square' | 'landscape' | 'portrait'>('landscape')
-    const [selectedFont, setSelectedFont] = useState(FONTS[0].value)
-    const [selectedGradient, setSelectedGradient] = useState(Object.values(GRADIENT_CATEGORIES)[0][0])
+    const [selectedGradient, setSelectedGradient] = useState(Object.values(GRADIENT_CATEGORIES)[1][0])
+    const [handleTextColor, setHandleTextColor] = useState<string>('#ffffff');
 
     // Emoji
     const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null)
@@ -90,30 +105,46 @@ const Dashboard = () => {
 
     // Undo/Redo history
     const historyRef = useRef<Array<{
-        gradient: string; textColor: string; font: string
+        gradient: string;
         alignment: 'left' | 'center' | 'right'
         ratio: 'square' | 'landscape' | 'portrait'
         noise: boolean; emoji: string | null; emojiCount: number
+        handleTextColor: string;
+        progressType: 'bar' | 'circle'
     }>>([])
     const currentIndexRef = useRef(-1)
     const isTravelingRef = useRef(false)
 
     useEffect(() => {
         if (isTravelingRef.current) return
-        const snapshot = { gradient: selectedGradient, textColor, font: selectedFont, alignment, ratio, noise: noiseEnabled, emoji: selectedEmoji, emojiCount }
+        const snapshot = {
+            gradient: selectedGradient,
+            alignment,
+            ratio,
+            noise: noiseEnabled,
+            emoji: selectedEmoji,
+            emojiCount,
+            handleTextColor,
+            progressType
+        }
         historyRef.current = historyRef.current.slice(0, currentIndexRef.current + 1)
         historyRef.current.push(snapshot)
         currentIndexRef.current = historyRef.current.length - 1
-    }, [selectedGradient, textColor, selectedFont, alignment, ratio, noiseEnabled, selectedEmoji, emojiCount])
+    }, [selectedGradient, progressType, handleTextColor, alignment, ratio, noiseEnabled, selectedEmoji, emojiCount])
 
     useEffect(() => {
         const restore = (index: number) => {
             const s = historyRef.current[index]
             if (!s) return
             isTravelingRef.current = true
-            setSelectedGradient(s.gradient); setTextColor(s.textColor); setSelectedFont(s.font)
-            setAlignment(s.alignment); setRatio(s.ratio); setNoiseEnabled(s.noise)
-            setSelectedEmoji(s.emoji); setEmojiCount(s.emojiCount)
+            setSelectedGradient(s.gradient);
+            setProgressType(s.progressType)
+            setAlignment(s.alignment);
+            setRatio(s.ratio);
+            setHandleTextColor(s.handleTextColor)
+            setNoiseEnabled(s.noise)
+            setSelectedEmoji(s.emoji);
+            setEmojiCount(s.emojiCount)
             setTimeout(() => { isTravelingRef.current = false }, 100)
         }
 
@@ -139,13 +170,13 @@ const Dashboard = () => {
 
     const shuffleStyle = () => {
         setSelectedGradient(getRandom(Object.values(GRADIENT_CATEGORIES).flat()))
-        setSelectedFont(getRandom(FONTS).value)
         setAlignment(getRandom(['left', 'center', 'right'] as const))
         setRatio(getRandom(['square', 'landscape', 'portrait'] as const))
-        setTextColor(Math.random() > 0.5 ? '#ffffff' : '#0f172a')
         setSelectedEmoji(Math.random() > 0.5 ? selectedEmoji || '🔥' : null)
         setEmojiCount(Math.floor(Math.random() * 8) + 3)
         setNoiseEnabled(Math.random() > 0.3)
+        setHandleTextColor('#ffffff')
+        setProgressType(getRandom(['bar', 'circle'] as const))
     }
 
     // Export
@@ -166,70 +197,19 @@ const Dashboard = () => {
 
     return (
         <div className="w-full h-screen overflow-hidden flex flex-col">
-
-            {/* Nav */}
-            <nav className="bg-card w-full border-b-2 border-white/10 flex items-center justify-between px-5 py-4 shrink-0">
-                <Link href="/" className="flex items-center gap-2 group transition-all">
-                    <div className="relative overflow-hidden rounded-lg group-hover:scale-110 transition-transform duration-200">
-                        <Image src="/logo.png" alt="Milestone Studio Logo" width={32} height={32} className="object-contain" />
-                    </div>
-                    <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 leading-none">
-                        Milestore Studio
-                    </h1>
-                </Link>
-
-                <div className="flex items-center justify-center gap-3">
-                    <p className="text-xs text-muted-foreground">
-                        <KbdGroup>
-                            <Kbd>Ctrl + Z</Kbd><span>Undo</span>
-                            <span className="mx-1">•</span>
-                            <Kbd>Ctrl + Y</Kbd><span>Redo</span>
-                        </KbdGroup>
-                    </p>
-
-                    <Link href="https://github.com/nikhilsaiankilla/milestone-studio" target="_blank">
-                        <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-                                <path d="M9 18c-4.51 2-5-2-7-2" />
-                            </svg>
-                            <span>GitHub</span>
-                            {stars !== null && (
-                                <span className="ml-1 flex items-center gap-1 border-l pl-2 border-border text-muted-foreground">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-500">
-                                        <path d="M12 1.7L14.6 9h7.7l-6.2 4.5 2.4 7.3L12 16.3l-6.5 4.5 2.4-7.3L1.7 9h7.7L12 1.7z" />
-                                    </svg>
-                                    {stars}
-                                </span>
-                            )}
-                        </Button>
-                    </Link>
-
-                    <Link href="https://twitter.com/itzznikhilsai" target="_blank">
-                        <Button className="flex items-center gap-2 p-4 cursor-pointer" variant="outline">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
-                            </svg>
-                        </Button>
-                    </Link>
-
-                    <Link href="https://www.buymeacoffee.com/nikhilsaiankilla" target="_blank">
-                        <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
-                            <Image src="/buymeacoffee.png" alt="Buy Me a Coffee" width={18} height={18} />
-                            <span>Buy me a coffee</span>
-                        </Button>
-                    </Link>
-                </div>
-            </nav>
+            <DashboardNav stars={stars} />
 
             {/* Body */}
             <div className="w-full flex justify-between overflow-hidden flex-1">
-
                 <LeftPanel
                     active={active} setActive={setActive}
+                    progressType={progressType}
+                    setProgressType={setProgressType}
                     platform={platform} setPlatform={setPlatform}
                     handle={handle} setHandle={setHandle}
                     metrics={metrics}
+                    handleTextColor={handleTextColor}
+                    onChangeHandleTextColor={setHandleTextColor}
                     activeMetricIndex={activeMetricIndex}
                     setActiveMetricIndex={setActiveMetricIndex}
                     handleAddMetric={handleAddMetric}
@@ -260,16 +240,16 @@ const Dashboard = () => {
                         <CardCanvas
                             ref={cardRef}
                             active={active}
+                            progressType={progressType}
                             metrics={metrics}
                             selectedGradient={selectedGradient}
-                            textColor={textColor}
-                            selectedFont={selectedFont}
                             alignment={alignment}
                             ratio={ratio}
                             noiseEnabled={noiseEnabled}
                             selectedEmoji={selectedEmoji}
                             emojiPositions={emojiPositions}
                             handle={handle}
+                            handleTextColor={handleTextColor}
                             platform={platform}
                             borderRadius={borderRadius}
                         />
@@ -278,8 +258,6 @@ const Dashboard = () => {
 
                 <RightPanel
                     selectedGradient={selectedGradient} setSelectedGradient={setSelectedGradient}
-                    textColor={textColor} setTextColor={setTextColor}
-                    selectedFont={selectedFont} setSelectedFont={setSelectedFont}
                     alignment={alignment} setAlignment={setAlignment}
                     noiseEnabled={noiseEnabled} setNoiseEnabled={setNoiseEnabled}
                     ratio={ratio} setRatio={setRatio}

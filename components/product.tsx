@@ -1,99 +1,124 @@
-"use client"
+'use client'
 
 import { ChevronDown, ExternalLink, Sparkles } from 'lucide-react'
 import React, { useState } from 'react'
 
+interface Product {
+    name: string
+    desc: string
+    href: string
+    image: string
+    tag?: string // optional badge e.g. "New", "Free", "Open Source"
+}
+
+// ── ADD YOUR PRODUCTS HERE ────────────────────────────────────────────────────
+const PRODUCTS: Product[] = [
+    {
+        name: "ShipInDays",
+        desc: "Launch SaaS MVPs faster with production-ready scaffolding",
+        href: "https://shipindays.nikhilsai.in",
+        image: "/shipindays.png",
+        tag: "Open Source",
+    },
+    {
+        name: "MintConvert",
+        desc: "Convert bank statements to CSV, Excel, JSON & more",
+        href: "https://mintconvert.com",
+        image: "/mintconvert.png",
+        tag: "Free",
+    },
+    // Add more products below 👇
+    // {
+    //     name: "Your Product",
+    //     desc: "Short one-liner description",
+    //     href: "https://yourproduct.com",
+    //     image: "/yourproduct.png",
+    //     tag: "New",
+    // },
+]
+// ─────────────────────────────────────────────────────────────────────────────
+
 const Product = () => {
-    const [showProducts, setShowProducts] = useState(false)
+    const [open, setOpen] = useState(false)
 
-    const products = [
-        {
-            name: "ShipInDays",
-            desc: "Launch SaaS MVPs faster",
-            href: "https://shipindays.nikhilsai.in",
-            image: "/shipindays.png",
-        },
-        {
-            name: "Mint convert",
-            desc: "Convert Bank stateements to CSV for free",
-            href: "https://mintconvert.com",
-            image: "/mintconvert.png",
-        },
-    ]
     return (
-        < div className="px-3 pb-4 pt-5" >
+        <div className="pt-2">
             <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.02]">
+
+                {/* Header toggle */}
                 <button
-                    onClick={() => setShowProducts(!showProducts)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-left transition-all duration-200 cursor-pointer"
+                    onClick={() => setOpen(!open)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/[0.03] transition-colors duration-150 cursor-pointer"
                 >
-                    <div>
-                        <p className="text-[11px] font-bold text-white flex items-center gap-2">
-                            <Sparkles size={14} />
-                            Other Products
-                        </p>
-                        <p className="text-[10px] text-white/40 mt-0.5">
-                            Built by me
-                        </p>
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                            <Sparkles size={12} className="text-primary" />
+                        </div>
+                        <div>
+                            <p className="text-[11px] font-bold text-white/80 leading-none">
+                                More Products from myside
+                            </p>
+                            <p className="text-[10px] text-white/30 mt-0.5">
+                                {PRODUCTS.length} products
+                            </p>
+                        </div>
                     </div>
 
-                    <div
-                        className={`transition-transform duration-300 ${showProducts ? "rotate-180" : "rotate-0"
-                            }`}
-                    >
-                        <ChevronDown size={16} className="text-white/50" />
-                    </div>
+                    <ChevronDown
+                        size={14}
+                        className={`text-white/30 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+                    />
                 </button>
 
-                {/* Animated Content */}
-                <div
-                    className={`grid transition-all duration-300 ease-in-out ${showProducts
-                        ? "grid-rows-[1fr] opacity-100"
-                        : "grid-rows-[0fr] opacity-0"
-                        }`}
-                >
+                {/* Animated list */}
+                <div className={`grid transition-all duration-300 ease-in-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                     <div className="overflow-hidden">
-                        <div className="px-3 pb-3 space-y-2">
-                            {products.map((item, index) => (
+                        <div className="px-3 pb-3 pt-1 space-y-2">
+                            {PRODUCTS.map((item, index) => (
                                 <a
                                     key={item.name}
                                     href={item.href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3 hover:bg-white/[0.06] transition-all flex items-center gap-3 translate-y-0"
-                                    style={{
-                                        transitionDelay: showProducts ? `${index * 60}ms` : "0ms",
-                                    }}
+                                    className="group flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/8 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/15 transition-all duration-200"
+                                    style={{ transitionDelay: open ? `${index * 50}ms` : '0ms' }}
                                 >
+                                    {/* Product image */}
                                     <img
                                         src={item.image}
                                         alt={item.name}
-                                        className="w-16 h-16 rounded-xl bg-white/5 border border-white/10"
+                                        className="w-10 h-10 rounded-xl object-cover bg-white/5 border border-white/10 shrink-0"
                                     />
 
-                                    <div className="flex items-start justify-between gap-2 w-full">
-                                        <div>
-                                            <p className="text-[12px] font-semibold text-white">
+                                    {/* Text */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[12px] font-semibold text-white/85 leading-none truncate">
                                                 {item.name}
                                             </p>
-                                            <p className="text-[10px] text-white/45 mt-1">
-                                                {item.desc}
-                                            </p>
+                                            {item.tag && (
+                                                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 leading-none shrink-0">
+                                                    {item.tag}
+                                                </span>
+                                            )}
                                         </div>
-
-                                        <ExternalLink
-                                            size={14}
-                                            className="text-white/35 shrink-0 mt-0.5"
-                                        />
+                                        <p className="text-[10px] text-white/35 mt-1 leading-snug line-clamp-1">
+                                            {item.desc}
+                                        </p>
                                     </div>
+
+                                    {/* Arrow */}
+                                    <ExternalLink
+                                        size={12}
+                                        className="text-white/20 group-hover:text-white/50 transition-colors shrink-0"
+                                    />
                                 </a>
                             ))}
                         </div>
                     </div>
                 </div>
             </div>
-        </div >
-
+        </div>
     )
 }
 
