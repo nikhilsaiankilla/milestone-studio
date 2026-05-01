@@ -75,7 +75,6 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                 style={{ background: selectedGradient, borderRadius }}
             />
 
-            {/* Noise overlay */}
             {noiseEnabled && (
                 <div
                     className="absolute inset-0 pointer-events-none"
@@ -83,8 +82,8 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
                         backgroundSize: '200px 200px',
                         backgroundRepeat: 'repeat',
-                        opacity: 1.5,
-                        mixBlendMode: 'overlay',
+                        opacity: 0.10,  // Visible without blend mode
+                        // NO mixBlendMode here
                     }}
                 />
             )}
@@ -177,62 +176,74 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
             {active === 'milestone' && (() => {
                 const metric = metrics[0];
                 const value = parseValue(metric?.value || '0');
-                const { past, future } = getMilestones(value);
+                const { past1, past2, future1, future2 } = getMilestones(value);
                 const s = metric.style;
 
-                // Helper for shared styles to keep code clean
                 const baseFontStyle = {
                     fontStyle: s?.valueItalic ? 'italic' : 'normal',
                     fontFamily: s?.fontFamily,
-                    transition: 'all 0.4s ease-in-out' // Smooth transitions if values change
+                    transition: 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
+                    color: s?.textColor || '#ffffff'
                 };
 
                 return (
                     <div
-                        className="relative z-10 flex flex-col items-center justify-center"
-                        style={{
-                            color: '#ffffff',
-                            perspective: '1000px' // Essential for the 3D "cylinder" effect
-                        }}
+                        className="relative z-10 flex flex-col items-center justify-center border-none outline-none bg-transparent"
+                        style={{ perspective: '1200px' }}
                     >
-                        {/* TOP (Future) - Rotated backward and scaled down */}
+                        {/* FUTURE 2 - Ultra-Tightened */}
                         <div
-                            className="opacity-20 tracking-wide select-none"
+                            className="opacity-10 select-none pointer-events-none"
                             style={{
                                 ...baseFontStyle,
-                                fontSize: `${s?.valueSize * 0.6}px`, // Scaled down significantly
-                                fontWeight: s?.valueBold ? 400 : 200,
-                                transform: 'rotateX(-35deg) translateY(10px) scale(0.9)', // Curved back
-                                filter: 'blur(1px)', // Optional: adds depth
-                                letterSpacing: "7px"
+                                fontSize: `${s?.valueSize * 0.6}px`,
+                                fontWeight: s?.valueBold ? 300 : 100,
+                                /* translateY reduced from 12px to 6px | translateZ reduced from -60px to -40px */
+                                transform: 'rotateX(-45deg) translateY(6px) translateZ(-10px) scale(0.85)',
+                                filter: 'blur(0.6px)',
+                                letterSpacing: "4px"
                             }}
                         >
-                            {formatNumber(future)}
+                            {formatNumber(future2)}
                         </div>
 
-                        {/* MIDDLE (Current) - Large and prominent */}
-                        <div className="flex flex-col items-center z-20 my-2">
+                        {/* FUTURE 1 - Tightened */}
+                        <div
+                            className="opacity-30 select-none pointer-events-none"
+                            style={{
+                                ...baseFontStyle,
+                                fontSize: `${s?.valueSize * 0.7}px`,
+                                fontWeight: s?.valueBold ? 400 : 200,
+                                /* translateY reduced from 4px to 2px | translateZ reduced from -30px to -20px */
+                                transform: 'rotateX(-30deg) translateY(2px) translateZ(-20px) scale(0.85)',
+                                filter: 'blur(0.5px)',
+                                letterSpacing: "6px"
+                            }}
+                        >
+                            {formatNumber(future1)}
+                        </div>
+
+                        {/* MIDDLE (Current) */}
+                        <div className="flex flex-col items-center z-20">
                             <div
                                 className="leading-none"
                                 style={{
                                     ...baseFontStyle,
                                     fontSize: `${s?.valueSize}px`,
                                     fontWeight: s?.valueBold ? 800 : 400,
-                                    transform: 'translateZ(20px)', // Pops it forward
-                                    letterSpacing: "10px"
+                                    transform: 'translateZ(20px)',
+                                    letterSpacing: "10px",
+                                    textShadow: `0 0 20px ${s?.textColor || '#ffffff'}33`
                                 }}
                             >
                                 {formatNumber(value)}
                             </div>
-                            <div className="mt-2 uppercase tracking-[0.25em] opacity-60"
+                            <div
+                                className="mt-1 uppercase tracking-[0.4em] opacity-60"
                                 style={{
                                     fontSize: `${s?.labelSize}px`,
                                     fontWeight: s?.labelBold ? 700 : 400,
                                     fontStyle: s?.labelItalic ? 'italic' : 'normal',
-                                    marginTop: '4px',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    opacity: 0.6,
                                     fontFamily: s?.fontFamily
                                 }}
                             >
@@ -240,19 +251,36 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                             </div>
                         </div>
 
-                        {/* BOTTOM (Past) - Rotated forward and scaled down */}
+                        {/* PAST 1 - Tightened */}
                         <div
-                            className="opacity-20 tracking-wide select-none"
+                            className="opacity-30 select-none pointer-events-none"
+                            style={{
+                                ...baseFontStyle,
+                                fontSize: `${s?.valueSize * 0.7}px`,
+                                fontWeight: s?.valueBold ? 400 : 200,
+                                /* translateY reduced from -4px to -2px | translateZ reduced from -30px to -20px */
+                                transform: 'rotateX(30deg) translateY(-2px) translateZ(-20px) scale(0.85)',
+                                filter: 'blur(0.5px)',
+                                letterSpacing: "6px"
+                            }}
+                        >
+                            {formatNumber(past1)}
+                        </div>
+
+                        {/* PAST 2 - Ultra-Tightened */}
+                        <div
+                            className="opacity-10 select-none pointer-events-none"
                             style={{
                                 ...baseFontStyle,
                                 fontSize: `${s?.valueSize * 0.6}px`,
-                                fontWeight: s?.valueBold ? 400 : 200,
-                                transform: 'rotateX(35deg) translateY(-10px) scale(0.9)', // Curved forward/down
-                                filter: 'blur(1px)',
-                                letterSpacing: "7px"
+                                fontWeight: s?.valueBold ? 300 : 100,
+                                /* translateY reduced from -12px to -6px | translateZ reduced from -60px to -40px */
+                                transform: 'rotateX(45deg) translateY(-6px) translateZ(-10px) scale(0.85)',
+                                filter: 'blur(0.6px)',
+                                letterSpacing: "4px"
                             }}
                         >
-                            {formatNumber(past)}
+                            {formatNumber(past2)}
                         </div>
                     </div>
                 );
@@ -493,11 +521,29 @@ const formatNumber = (value: number | string) => {
 }
 
 const getMilestones = (value: number) => {
-    if (value <= 0) return { past: 0, future: 0 }
-    const magnitude = Math.pow(10, Math.floor(Math.log10(value)))
-    const past = Math.floor(value / magnitude) * magnitude
-    return { past, future: past + magnitude }
-}
+    // Handle 0 or edge cases
+    if (value === 0) return { past1: -10, past2: -20, future1: 10, future2: 20 };
+
+    const absValue = Math.abs(value);
+    const magnitude = Math.pow(10, Math.floor(Math.log10(absValue)));
+    const firstDigit = absValue / magnitude;
+
+    // Determine a "pretty" step size (1, 2, or 5)
+    let step;
+    if (firstDigit < 2) step = magnitude / 5;      // Steps of 200 for 1000
+    else if (firstDigit < 5) step = magnitude / 2; // Steps of 500 for 1000
+    else step = magnitude;                         // Steps of 1000 for 5000
+
+    // Round the base to the nearest step to keep the cylinder stable
+    const base = Math.floor(value / step) * step;
+
+    return {
+        past2: base - (step * 2),
+        past1: base - step,
+        future1: base + step,
+        future2: base + (step * 2)
+    };
+};
 
 const parseValue = (value: string) => {
     const num = Number(value)
