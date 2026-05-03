@@ -11,7 +11,6 @@ export const GRADIENT_CATEGORIES = {
         "linear-gradient(135deg, #11998e, #38ef7d)",
         "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
     ],
-
     "Raycast Mesh": [
         // Aurora
         "radial-gradient(ellipse at 0% 0%, #3b0764 0%, transparent 50%), radial-gradient(ellipse at 100% 0%, #1e3a5f 0%, transparent 50%), radial-gradient(ellipse at 50% 100%, #065f46 0%, transparent 50%), #0a0a0f",
@@ -32,7 +31,6 @@ export const GRADIENT_CATEGORIES = {
         // Deep Ocean
         "radial-gradient(ellipse at 0% 0%, #1e3a5f 0%, transparent 50%), radial-gradient(ellipse at 100% 100%, #0c4a6e 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, #0369a133 0%, transparent 60%), #000d1a",
     ],
-
     "Light Leaks": [
         // Red Distortion
         "radial-gradient(ellipse at 30% 50%, #ff000066 0%, transparent 40%), radial-gradient(ellipse at 60% 40%, #ff4d4d44 0%, transparent 35%), radial-gradient(ellipse at 80% 60%, #00b4db33 0%, transparent 40%), #0a0000",
@@ -51,7 +49,6 @@ export const GRADIENT_CATEGORIES = {
         // Arctic
         "radial-gradient(ellipse at 40% 30%, #00ccff55 0%, transparent 40%), radial-gradient(ellipse at 60% 70%, #0099ff44 0%, transparent 40%), radial-gradient(ellipse at 20% 60%, #ffffff22 0%, transparent 35%), #00080f",
     ],
-
     "Deep Mesh": [
         "radial-gradient(ellipse at 20% 50%, #c0392b88 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, #2980b988 0%, transparent 60%), radial-gradient(ellipse at 50% 50%, #1a1a2e 0%, #0d0d0d 100%)",
         "radial-gradient(ellipse at 15% 50%, #e67e2288 0%, transparent 55%), radial-gradient(ellipse at 85% 50%, #8e44ad88 0%, transparent 55%), radial-gradient(ellipse at 50% 50%, #111 0%, #1a1a1a 100%)",
@@ -63,7 +60,6 @@ export const GRADIENT_CATEGORIES = {
         "radial-gradient(at 0% 50%, rgba(255, 215, 0, 0.4) 0px, transparent 50%), radial-gradient(at 100% 50%, rgba(255, 69, 0, 0.5) 0px, transparent 50%), radial-gradient(at 50% 100%, rgba(75, 0, 130, 0.6) 0px, transparent 50%), #1a051a",
         "radial-gradient(at 10% 10%, rgba(0, 180, 219, 0.7) 0px, transparent 50%), radial-gradient(at 90% 10%, rgba(0, 131, 176, 0.5) 0px, transparent 50%), radial-gradient(at 50% 90%, rgba(5, 117, 230, 0.6) 0px, transparent 50%), #000428",
     ],
-
     "Soft Pastels": [
         "radial-gradient(ellipse at 30% 40%, #4a9e8e 0%, transparent 55%), radial-gradient(ellipse at 70% 60%, #2d6a4f 0%, transparent 55%), radial-gradient(ellipse at 50% 30%, #7fb5a0 0%, transparent 50%), #1e4d40",
         "radial-gradient(ellipse at 25% 45%, #8e9eab 0%, transparent 55%), radial-gradient(ellipse at 75% 55%, #4a6fa5 0%, transparent 55%), radial-gradient(ellipse at 50% 25%, #c9d6df 0%, transparent 50%), #2c3e50",
@@ -74,7 +70,31 @@ export const GRADIENT_CATEGORIES = {
         "radial-gradient(ellipse at 20% 50%, #a1c4fd 0%, transparent 55%), radial-gradient(ellipse at 80% 50%, #c2e9fb 0%, transparent 55%), radial-gradient(ellipse at 50% 80%, #e0f7fa 0%, transparent 50%), #1565c0",
         "radial-gradient(ellipse at 35% 45%, #fd746c 0%, transparent 55%), radial-gradient(ellipse at 65% 55%, #ff9068 0%, transparent 55%), radial-gradient(ellipse at 50% 20%, #ffb347 0%, transparent 50%), #7b1a1a",
     ],
+    "Generative": [
+    // Aurora Bands — the one that works, keep it
+    "repeating-linear-gradient(105deg, #000d0a 0px, #003322 10px, #00ff88 18px, #00cc66 22px, #009944 28px, #003322 36px, #000d0a 44px)",
 
+    // Sunset Curtains — wide warm folds
+    "repeating-linear-gradient(90deg, #0d0005 0%, #3d0020 8%, #aa2244 15%, #ff6633 22%, #ffaa44 28%, #ff6633 35%, #aa2244 42%, #3d0020 50%, #0d0005 58%)",
+
+    // Violet Drape — deep purple soft folds
+    "repeating-linear-gradient(92deg, #04000f 0%, #1a0050 10%, #4400cc 18%, #7700ff 25%, #4400cc 32%, #1a0050 40%, #04000f 50%)",
+
+    // Ocean Swell — deep blue wide waves
+    "repeating-linear-gradient(100deg, #000814 0%, #001845 12%, #0059b3 22%, #0077ff 28%, #0059b3 35%, #001845 45%, #000814 55%)",
+
+    // Rose Curtain — soft pink folds
+    "repeating-linear-gradient(88deg, #0d0005 0%, #440022 10%, #aa0055 18%, #ff3388 25%, #aa0055 32%, #440022 42%, #0d0005 52%)",
+
+    // Ember Glow — deep orange wide bands
+    "repeating-linear-gradient(95deg, #0d0500 0%, #3d1200 10%, #991f00 18%, #dd4400 24%, #ff7700 28%, #dd4400 33%, #991f00 40%, #3d1200 48%, #0d0500 56%)",
+
+    // Teal Depth
+    "repeating-linear-gradient(98deg, #000a0d 0%, #00202b 10%, #005566 18%, #00aacc 25%, #005566 32%, #00202b 42%, #000a0d 52%)",
+
+    // Gold Pleats
+    "repeating-linear-gradient(91deg, #0a0700 0%, #332200 10%, #886600 18%, #ccaa00 24%, #ffdd44 28%, #ccaa00 33%, #886600 40%, #332200 48%, #0a0700 56%)",
+    ],
     "Patterns": [
         "/pattern/1.webp",
         "/pattern/2.webp",
