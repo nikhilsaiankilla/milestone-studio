@@ -96,7 +96,7 @@ export const metadata: Metadata = {
     description:
       "Create beautiful milestone cards for creators, founders, and brands. Free, no login, export up to 6K PNG.",
     images: ["/og-image.png"],
-    creator: "@nikhilbuildss",
+    creator: "@itzznikhilsai",
   },
 
   robots: {
@@ -112,11 +112,6 @@ export const metadata: Metadata = {
   },
 
   category: "design",
-
-  // Verification (add values when you have them)
-  // verification: {
-  //   google: "your-google-site-verification",
-  // },
 };
 
 export default function RootLayout({

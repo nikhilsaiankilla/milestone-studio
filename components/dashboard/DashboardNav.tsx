@@ -59,7 +59,6 @@ const DashboardNav = ({ stars }: { stars: number | null }) => {
                 </Link>
             </div>
         </nav>
-
     )
 }
 

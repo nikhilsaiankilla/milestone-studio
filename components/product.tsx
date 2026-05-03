@@ -11,23 +11,23 @@ interface Product {
     tag?: string // optional badge e.g. "New", "Free", "Open Source"
 }
 
-// ── ADD YOUR PRODUCTS HERE ────────────────────────────────────────────────────
+// ADD YOUR PRODUCTS HERE
 const PRODUCTS: Product[] = [
     {
         name: "ShipInDays",
         desc: "Launch SaaS MVPs faster with production-ready scaffolding",
-        href: "https://shipindays.nikhilsai.in",
+        href: "https://shipindays.nikhilsai.in?ref=milestonestudio",
         image: "/shipindays.png",
         tag: "Open Source",
     },
     {
         name: "MintConvert",
         desc: "Convert bank statements to CSV, Excel, JSON & more",
-        href: "https://mintconvert.com",
+        href: "https://mintconvert.com?ref=milestonestudio",
         image: "/mintconvert.png",
         tag: "Free",
     },
-    // Add more products below 👇
+    // Add more products below
     // {
     //     name: "Your Product",
     //     desc: "Short one-liner description",
@@ -36,8 +36,6 @@ const PRODUCTS: Product[] = [
     //     tag: "New",
     // },
 ]
-// ─────────────────────────────────────────────────────────────────────────────
-
 const Product = () => {
     const [open, setOpen] = useState(false)
 
