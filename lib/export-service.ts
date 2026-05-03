@@ -5,7 +5,7 @@ import { QUALITY_PRESETS, type QualityPreset, type ExportFormat } from '@/types/
 export type { QualityPreset, ExportFormat }
 
 export const QUALITY_LABELS: Record<QualityPreset, string> = {
-    low: 'Low', medium: 'Med', high: 'High', '2k': '2K', '4k': '4K', '6k': '6K',
+    low: 'Low', medium: 'Med', high: 'High', // '2k': '2K', '4k': '4K', '6k': '6K'
 }
 
 export const QUALITY_SCALE = Object.fromEntries(

@@ -59,7 +59,7 @@ interface LeftPanelProps {
     onChangeHandleTextColor: (i: string) => void
 }
 
-const QUALITY_KEYS: QualityPreset[] = ['low', 'medium', 'high', '2k', '4k', '6k']
+const QUALITY_KEYS: QualityPreset[] = ['low', 'medium', 'high'] // '2k', '4k', '6k'
 
 export default function LeftPanel({
     active,
@@ -467,7 +467,7 @@ export default function LeftPanel({
 
                 <div className="space-y-1.5">
                     <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Export Quality</span>
-                    <div className="w-full grid grid-cols-6 gap-1 bg-white/5 border border-white/10 p-1 rounded-xl mt-1">
+                    <div className="w-full grid grid-cols-3 gap-1 bg-white/5 border border-white/10 p-1 rounded-xl mt-1">
                         {QUALITY_KEYS.map((q) => (
                             <button
                                 key={q}
