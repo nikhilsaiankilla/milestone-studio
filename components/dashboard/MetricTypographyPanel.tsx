@@ -1,9 +1,10 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { FONTS, type MetricStyle } from '@/types/card'
+import { type MetricStyle } from '@/types'
 import { Switch } from '../ui/switch'
 import { useRef } from 'react'
+import { FONTS } from '@/constants/fonts'
 
 interface Props {
     style: MetricStyle
@@ -250,6 +251,72 @@ export default function MetricTypographyPanel({ style, onChange }: Props) {
                         </button>
                     ))}
                 </div>
+            </div>
+
+            {/* Shadow toggle + sliders */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Text Shadow</span>
+                    <Switch
+                        checked={style.textShadowEnabled}
+                        onCheckedChange={(v) => onChange({ textShadowEnabled: v })}
+                    />
+                </div>
+
+                {style.textShadowEnabled && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {/* Blur */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Blur</span>
+                                <span className="text-[10px] text-white/50 font-mono">{style.textShadowBlur}px</span>
+                            </div>
+                            <input
+                                type="range" min={0} max={40} value={style.textShadowBlur}
+                                onChange={(e) => onChange({ textShadowBlur: Number(e.target.value) })}
+                                className="w-full accent-primary cursor-pointer h-1"
+                            />
+                        </div>
+
+                        {/* X offset */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Offset X</span>
+                                <span className="text-[10px] text-white/50 font-mono">{style.textShadowX}px</span>
+                            </div>
+                            <input
+                                type="range" min={-20} max={20} value={style.textShadowX}
+                                onChange={(e) => onChange({ textShadowX: Number(e.target.value) })}
+                                className="w-full accent-primary cursor-pointer h-1"
+                            />
+                        </div>
+
+                        {/* Y offset */}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Offset Y</span>
+                                <span className="text-[10px] text-white/50 font-mono">{style.textShadowY}px</span>
+                            </div>
+                            <input
+                                type="range" min={-20} max={20} value={style.textShadowY}
+                                onChange={(e) => onChange({ textShadowY: Number(e.target.value) })}
+                                className="w-full accent-primary cursor-pointer h-1"
+                            />
+                        </div>
+
+                        {/* Live preview */}
+                        <div
+                            className="text-center py-2 text-sm font-bold rounded-lg bg-white/5 border border-white/10 transition-all"
+                            style={{
+                                color: style.textColor,
+                                fontFamily: style.fontFamily,
+                                textShadow: `${style.textShadowX}px ${style.textShadowY}px ${style.textShadowBlur}px ${style.textColor}99`
+                            }}
+                        >
+                            Preview
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

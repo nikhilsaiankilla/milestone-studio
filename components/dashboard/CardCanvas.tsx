@@ -9,8 +9,8 @@
 import { useMemo, forwardRef } from 'react'
 import { Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { MetricIconKey, Metric, EmojiPosition } from '@/types/card'
-import { METRIC_ICONS } from '@/types/card'
+import type { MetricIconKey, Metric, EmojiPosition, MetricStyle } from '@/types'
+import { METRIC_ICONS } from '@/types'
 
 interface CardCanvasProps {
     progressType: 'circle' | 'bar'
@@ -26,12 +26,14 @@ interface CardCanvasProps {
     platform: { icon: React.ReactNode } | null
     borderRadius: number
     handleTextColor: string
+    selectedEmojiUrl: string | null
 }
 
 const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
     active,
     metrics,
     selectedGradient,
+    selectedEmojiUrl,
     alignment,
     ratio,
     noiseEnabled,
@@ -59,6 +61,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
         }
     }, [alignment])
 
+    // Detect if selectedGradient is an image path
+    const isImageBackground = /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(selectedGradient) || selectedGradient.startsWith('/')
+
     return (
         <div
             ref={ref}
@@ -69,45 +74,76 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
             )}
             style={{ borderRadius }}
         >
-            {/* Background gradient layer */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: selectedGradient, borderRadius }}
-            />
 
-            {noiseEnabled && (
+            {/* Milestone Studio watermark */}
+            <p
+                className="absolute z-20 flex items-center gap-1"
+                style={{
+                    left: '16px',
+                    bottom: '12px',
+                    fontSize: '9px',
+                    fontWeight: 600,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    opacity: 0.25,
+                    color: handleTextColor,
+                    fontFamily: 'sans-serif',
+                    pointerEvents: 'none',
+                }}
+            >
+                Milestone Studio
+            </p>
+
+            {isImageBackground ? (
+                <img
+                    src={selectedGradient}
+                    alt=""
+                    className="absolute inset-0 w-full h-full pointer-events-none object-cover"
+                    style={{ borderRadius }}
+                />
+            ) : (
                 <div
                     className="absolute inset-0 pointer-events-none"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                        backgroundSize: '200px 200px',
-                        backgroundRepeat: 'repeat',
-                        opacity: 0.10,  // Visible without blend mode
-                        // NO mixBlendMode here
-                    }}
+                    style={{ background: selectedGradient, borderRadius }}
                 />
             )}
 
-            {/* Emoji scatter */}
+            {noiseEnabled && (
+                <svg
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ opacity: 0.18, borderRadius }}
+                >
+                    <filter id="noise-filter">
+                        <feTurbulence
+                            type="fractalNoise"
+                            baseFrequency="0.9"
+                            numOctaves="4"
+                            stitchTiles="stitch"
+                        />
+                        <feColorMatrix type="saturate" values="0" />
+                    </filter>
+                    <rect width="100%" height="100%" filter="url(#noise-filter)" />
+                </svg>
+            )}
+
             {selectedEmoji && emojiPositions.map((e) => (
-                <span
+                <img
                     key={e.id}
+                    src={selectedEmojiUrl ?? emojiToTwemojiUrl(selectedEmoji)}
+                    alt={selectedEmoji}
                     className="absolute pointer-events-none select-none z-[5]"
                     style={{
                         left: `${e.x}%`,
                         top: `${e.y}%`,
-                        fontSize: `${e.size}px`,
+                        width: `${e.size}px`,
+                        height: `${e.size}px`,
                         transform: `rotate(${e.rotation}deg)`,
                         opacity: e.opacity,
-                        filter: `blur(${e.size > 30 ? 0.6 : 1.4}px)`,
-                        textShadow: `
-                            ${e.size * 0.02}px ${e.size * 0.02}px ${e.size * 0.1}px rgba(0,0,0,0.2),
-                            ${e.size * 0.04}px ${e.size * 0.04}px ${e.size * 0.2}px rgba(0,0,0,0.1)
-                        `,
+                        filter: `blur(${e.blur}px) drop-shadow(${e.size * 0.02}px ${e.size * 0.02}px ${e.size * 0.1}px rgba(0,0,0,0.2))`,
                     }}
-                >
-                    {selectedEmoji}
-                </span>
+                    crossOrigin="anonymous"
+                />
             ))}
 
             {/* Handle watermark */}
@@ -121,49 +157,63 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                 </p>
             )}
 
-            {/* Metrics template */}
             {active === 'metrics' && (
-                <div
-                    className={cn(
-                        'relative z-10 flex flex-col',
-                        alignment === 'left' && 'items-start',
-                        alignment === 'center' && 'items-center',
-                        alignment === 'right' && 'items-end'
-                    )}
-                >
-                    <div className="flex flex-wrap items-center gap-6">
-                        {metrics.map((m) => {
+                <div className={cn(
+                    'relative z-10 flex flex-col',
+                    alignment === 'left' && 'items-start',
+                    alignment === 'center' && 'items-center',
+                    alignment === 'right' && 'items-end'
+                )}>
+                    <div className="flex flex-wrap items-center gap-8">
+                        {metrics.map((m, idx) => {
                             const Icon = METRIC_ICONS[m.icon as MetricIconKey] || Users
                             const s = m.style
 
                             return (
-                                <div
-                                    key={m.id}
-                                    className="flex flex-col items-center"
-                                    style={{ color: s?.textColor }}
-                                >
-                                    <div className="flex items-center gap-2 tracking-tight">
-                                        {s?.showIcon && <Icon size={s?.iconSize} strokeWidth={s?.valueBold ? 2.5 : 1.5} />}
-                                        <span style={{
-                                            fontSize: `${s?.valueSize}px`,
-                                            fontWeight: s?.valueBold ? 800 : 400,
-                                            fontStyle: s?.valueItalic ? 'italic' : 'normal',
-                                            fontFamily: s?.fontFamily
+                                <div key={m.id} className="flex items-center gap-8">
+                                    {/* Divider between metrics */}
+                                    {idx > 0 && (
+                                        <div className="w-px h-12 opacity-20" style={{ backgroundColor: s?.textColor || '#ffffff' }} />
+                                    )}
+                                    <div
+                                        className="flex flex-col"
+                                        style={{
+                                            color: s?.textColor,
+                                            alignItems: alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center'
+                                        }}
+                                    >
+                                        {/* Icon + Value */}
+                                        <div className="flex items-center gap-2 tracking-tight leading-none">
+                                            {s?.showIcon && (
+                                                <Icon size={s?.iconSize * 0.6} strokeWidth={s?.valueBold ? 2.5 : 1.5} style={{ opacity: 0.7 }} />
+                                            )}
+                                            <span style={{
+                                                fontSize: `${s?.valueSize}px`,
+                                                fontWeight: s?.valueBold ? 800 : 400,
+                                                fontStyle: s?.valueItalic ? 'italic' : 'normal',
+                                                fontFamily: s?.fontFamily,
+                                                textShadow: getTextShadow(s),
+                                                lineHeight: 1,
+                                            }}>
+                                                {formatNumber(m.value)}
+                                            </span>
+                                        </div>
+                                        {/* Label on top */}
+                                        <div style={{
+                                            fontSize: `${s?.labelSize}px`,
+                                            fontWeight: s?.labelBold ? 700 : 600,
+                                            fontStyle: s?.labelItalic ? 'italic' : 'normal',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.15em',
+                                            opacity: 0.5,
+                                            fontFamily: s?.fontFamily,
+                                            textShadow: getTextShadow(s),
+                                            marginBottom: '6px',
+                                            textAlign: 'center'
                                         }}>
-                                            {formatNumber(m.value)}
-                                        </span>
-                                    </div>
-                                    <div style={{
-                                        fontSize: `${s?.labelSize}px`,
-                                        fontWeight: s?.labelBold ? 700 : 400,
-                                        fontStyle: s?.labelItalic ? 'italic' : 'normal',
-                                        marginTop: '4px',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.05em',
-                                        opacity: 0.6,
-                                        fontFamily: s?.fontFamily
-                                    }}>
-                                        {m.label}
+                                            {m.label}
+                                        </div>
+
                                     </div>
                                 </div>
                             )
@@ -172,114 +222,112 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                 </div>
             )}
 
-            {/* Milestone template */}
             {active === 'milestone' && (() => {
                 const metric = metrics[0];
                 const value = parseValue(metric?.value || '0');
                 const { past1, past2, future1, future2 } = getMilestones(value);
                 const s = metric.style;
 
-                const baseFontStyle = {
+                const base = {
                     fontStyle: s?.valueItalic ? 'italic' : 'normal',
                     fontFamily: s?.fontFamily,
-                    transition: 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)',
-                    color: s?.textColor || '#ffffff'
+                    transition: 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+                    color: s?.textColor || '#ffffff',
+                    userSelect: 'none' as const,
+                    pointerEvents: 'none' as const,
+                    lineHeight: 1,
+                    display: 'block',
                 };
 
                 return (
                     <div
-                        className="relative z-10 flex flex-col items-center justify-center border-none outline-none bg-transparent"
-                        style={{ perspective: '1200px' }}
+                        className="relative z-10 flex flex-col items-center justify-center"
+                        style={{ perspective: '800px', gap: '2px' }}
                     >
-                        {/* FUTURE 2 - Ultra-Tightened */}
-                        <div
-                            className="opacity-10 select-none pointer-events-none"
-                            style={{
-                                ...baseFontStyle,
-                                fontSize: `${s?.valueSize * 0.6}px`,
-                                fontWeight: s?.valueBold ? 300 : 100,
-                                /* translateY reduced from 12px to 6px | translateZ reduced from -60px to -40px */
-                                transform: 'rotateX(-45deg) translateY(6px) translateZ(-10px) scale(0.85)',
-                                filter: 'blur(0.6px)',
-                                letterSpacing: "4px"
-                            }}
-                        >
+                        {/* Future 2 — farthest away */}
+                        <div style={{
+                            ...base,
+                            fontSize: `${s?.valueSize * 0.52}px`,
+                            fontWeight: 200,
+                            letterSpacing: '3px',
+                            opacity: 0.08,
+                            filter: 'blur(1.8px)',
+                            transform: 'rotateX(-38deg) translateY(4px) translateZ(-60px) scale(0.78)',
+                            marginBottom: '2px',
+                        }}>
                             {formatNumber(future2)}
                         </div>
 
-                        {/* FUTURE 1 - Tightened */}
-                        <div
-                            className="opacity-30 select-none pointer-events-none"
-                            style={{
-                                ...baseFontStyle,
-                                fontSize: `${s?.valueSize * 0.7}px`,
-                                fontWeight: s?.valueBold ? 400 : 200,
-                                /* translateY reduced from 4px to 2px | translateZ reduced from -30px to -20px */
-                                transform: 'rotateX(-30deg) translateY(2px) translateZ(-20px) scale(0.85)',
-                                filter: 'blur(0.5px)',
-                                letterSpacing: "6px"
-                            }}
-                        >
+                        {/* Future 1 */}
+                        <div style={{
+                            ...base,
+                            fontSize: `${s?.valueSize * 0.68}px`,
+                            fontWeight: s?.valueBold ? 300 : 200,
+                            letterSpacing: '5px',
+                            opacity: 0.22,
+                            filter: 'blur(0.9px)',
+                            transform: 'rotateX(-22deg) translateY(2px) translateZ(-30px) scale(0.88)',
+                            marginBottom: '6px',
+                        }}>
                             {formatNumber(future1)}
                         </div>
 
-                        {/* MIDDLE (Current) */}
-                        <div className="flex flex-col items-center z-20">
-                            <div
-                                className="leading-none"
-                                style={{
-                                    ...baseFontStyle,
-                                    fontSize: `${s?.valueSize}px`,
-                                    fontWeight: s?.valueBold ? 800 : 400,
-                                    transform: 'translateZ(20px)',
-                                    letterSpacing: "10px",
-                                    textShadow: `0 0 20px ${s?.textColor || '#ffffff'}33`
-                                }}
-                            >
+                        {/* Current — hero */}
+                        <div className="flex flex-col items-center z-20" style={{ marginBottom: '6px' }}>
+                            <div style={{
+                                ...base,
+                                fontSize: `${s?.valueSize}px`,
+                                fontWeight: s?.valueBold ? 900 : 500,
+                                letterSpacing: '8px',
+                                opacity: 1,
+                                filter: 'none',
+                                transform: 'translateZ(0)',
+                                textShadow: `0 0 40px ${s?.textColor || '#ffffff'}55, 0 2px 8px rgba(0,0,0,0.4)`,
+                                pointerEvents: 'auto',
+                                userSelect: 'text',
+                            }}>
                                 {formatNumber(value)}
                             </div>
-                            <div
-                                className="mt-1 uppercase tracking-[0.4em] opacity-60"
-                                style={{
-                                    fontSize: `${s?.labelSize}px`,
-                                    fontWeight: s?.labelBold ? 700 : 400,
-                                    fontStyle: s?.labelItalic ? 'italic' : 'normal',
-                                    fontFamily: s?.fontFamily
-                                }}
-                            >
+                            <div style={{
+                                fontSize: `${s?.labelSize}px`,
+                                fontWeight: s?.labelBold ? 700 : 500,
+                                fontStyle: s?.labelItalic ? 'italic' : 'normal',
+                                fontFamily: s?.fontFamily,
+                                color: s?.textColor || '#ffffff',
+                                opacity: 0.45,
+                                letterSpacing: '0.35em',
+                                textTransform: 'uppercase',
+                                marginTop: '10px',
+                            }}>
                                 {metric?.label}
                             </div>
                         </div>
 
-                        {/* PAST 1 - Tightened */}
-                        <div
-                            className="opacity-30 select-none pointer-events-none"
-                            style={{
-                                ...baseFontStyle,
-                                fontSize: `${s?.valueSize * 0.7}px`,
-                                fontWeight: s?.valueBold ? 400 : 200,
-                                /* translateY reduced from -4px to -2px | translateZ reduced from -30px to -20px */
-                                transform: 'rotateX(30deg) translateY(-2px) translateZ(-20px) scale(0.85)',
-                                filter: 'blur(0.5px)',
-                                letterSpacing: "6px"
-                            }}
-                        >
+                        {/* Past 1 */}
+                        <div style={{
+                            ...base,
+                            fontSize: `${s?.valueSize * 0.68}px`,
+                            fontWeight: s?.valueBold ? 300 : 200,
+                            letterSpacing: '5px',
+                            opacity: 0.22,
+                            filter: 'blur(0.9px)',
+                            transform: 'rotateX(22deg) translateY(-2px) translateZ(-30px) scale(0.88)',
+                            marginTop: '2px',
+                        }}>
                             {formatNumber(past1)}
                         </div>
 
-                        {/* PAST 2 - Ultra-Tightened */}
-                        <div
-                            className="opacity-10 select-none pointer-events-none"
-                            style={{
-                                ...baseFontStyle,
-                                fontSize: `${s?.valueSize * 0.6}px`,
-                                fontWeight: s?.valueBold ? 300 : 100,
-                                /* translateY reduced from -12px to -6px | translateZ reduced from -60px to -40px */
-                                transform: 'rotateX(45deg) translateY(-6px) translateZ(-10px) scale(0.85)',
-                                filter: 'blur(0.6px)',
-                                letterSpacing: "4px"
-                            }}
-                        >
+                        {/* Past 2 — farthest away */}
+                        <div style={{
+                            ...base,
+                            fontSize: `${s?.valueSize * 0.52}px`,
+                            fontWeight: 200,
+                            letterSpacing: '3px',
+                            opacity: 0.08,
+                            filter: 'blur(1.8px)',
+                            transform: 'rotateX(38deg) translateY(-4px) translateZ(-60px) scale(0.78)',
+                            marginTop: '2px',
+                        }}>
                             {formatNumber(past2)}
                         </div>
                     </div>
@@ -302,6 +350,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                 const typographyBase = {
                     fontFamily: s?.fontFamily,
                     fontStyle: s?.valueItalic ? 'italic' : 'normal',
+                    textShadow: getTextShadow(s),
                 };
 
                 return (
@@ -427,77 +476,80 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                 );
             })()}
 
-            {/* Grid Template */}
             {active === 'list' && (
-                <div
-                    className={cn(
-                        "relative z-10 grid gap-x-12 gap-y-8 w-full px-4",
-                        // Dynamic column adjustment based on metric count
-                        metrics.length === 1 ? "grid-cols-1" :
-                            metrics.length === 2 ? "grid-cols-2" :
-                                metrics.length <= 4 ? "grid-cols-2" : "grid-cols-3",
-
-                        // Alignment based on global setting
-                        alignment === 'left' && 'justify-items-start',
-                        alignment === 'center' && 'justify-items-center text-center',
-                        alignment === 'right' && 'justify-items-end text-right'
-                    )}
-                >
+                <div className={cn(
+                    "relative z-10 w-full px-4",
+                    "grid gap-4",
+                    metrics.length === 1 ? "grid-cols-1 max-w-xs" :
+                        metrics.length === 2 ? "grid-cols-2" :
+                            metrics.length <= 4 ? "grid-cols-2" : "grid-cols-3",
+                    alignment === 'left' && 'justify-items-start',
+                    alignment === 'center' && 'justify-items-center',
+                    alignment === 'right' && 'justify-items-end'
+                )}>
                     {metrics.map((m) => {
-                        const Icon = METRIC_ICONS[m.icon as MetricIconKey] || Users;
-                        const s = m.style;
+                        const Icon = METRIC_ICONS[m.icon as MetricIconKey] || Users
+                        const s = m.style
+                        const color = s?.textColor || '#ffffff'
 
                         return (
                             <div
                                 key={m.id}
-                                className="flex flex-col group transition-transform duration-300 hover:scale-105"
+                                className="relative flex flex-col justify-between w-full overflow-hidden"
                                 style={{
-                                    color: s?.textColor || '#ffffff',
-                                    alignItems: alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center'
+                                    color,
+                                    padding: '18px 20px',
+                                    borderRadius: '16px',
+                                    background: `${color}08`,
+                                    border: `1px solid ${color}15`,
+                                    backdropFilter: 'blur(8px)',
+                                    alignItems: alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'flex-start',
+                                    minWidth: 0,
                                 }}
                             >
-                                {/* Value & Icon Row */}
-                                <div className="flex items-center gap-3 tracking-tight leading-none">
+                                {/* Left accent bar */}
+                                <div
+                                    className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full"
+                                    style={{ background: `linear-gradient(180deg, ${color}, ${color}33)` }}
+                                />
+
+                                {/* Icon + Label row */}
+                                <div className="flex items-center gap-2 mb-3 pl-3">
                                     {s?.showIcon && (
                                         <Icon
-                                            size={s?.iconSize || 24}
-                                            strokeWidth={s?.valueBold ? 2.5 : 1.5}
-                                            className="opacity-80"
+                                            size={s?.iconSize * 0.45 || 16}
+                                            strokeWidth={1.5}
+                                            style={{ opacity: 0.5 }}
                                         />
                                     )}
-                                    <span
-                                        style={{
-                                            fontSize: `${s?.valueSize || 48}px`,
-                                            fontWeight: s?.valueBold ? 800 : 400,
-                                            fontStyle: s?.valueItalic ? 'italic' : 'normal',
-                                            fontFamily: s?.fontFamily
-                                        }}
-                                    >
-                                        {formatNumber(m.value)}
+                                    <span style={{
+                                        fontSize: `${s?.labelSize || 11}px`,
+                                        fontWeight: 600,
+                                        fontFamily: s?.fontFamily,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.15em',
+                                        opacity: 0.45,
+                                    }}>
+                                        {m.label}
                                     </span>
                                 </div>
 
-                                {/* Label Row */}
-                                <div
-                                    className="uppercase tracking-[0.2em] opacity-60"
-                                    style={{
-                                        fontSize: `${s?.labelSize || 12}px`,
-                                        fontWeight: s?.labelBold ? 700 : 400,
-                                        fontStyle: s?.labelItalic ? 'italic' : 'normal',
+                                {/* Value */}
+                                <div className="pl-3">
+                                    <span style={{
+                                        fontSize: `${s?.valueSize || 42}px`,
+                                        fontWeight: s?.valueBold ? 800 : 400,
+                                        fontStyle: s?.valueItalic ? 'italic' : 'normal',
                                         fontFamily: s?.fontFamily,
-                                        marginTop: '8px'
-                                    }}
-                                >
-                                    {m.label}
+                                        textShadow: getTextShadow(s),
+                                        lineHeight: 1,
+                                        display: 'block',
+                                    }}>
+                                        {formatNumber(m.value)}
+                                    </span>
                                 </div>
-
-                                {/* Optional Accent Line */}
-                                <div
-                                    className="h-1 w-8 mt-2 rounded-full opacity-30"
-                                    style={{ backgroundColor: s?.textColor || '#ffffff' }}
-                                />
                             </div>
-                        );
+                        )
                     })}
                 </div>
             )}
@@ -548,4 +600,19 @@ const getMilestones = (value: number) => {
 const parseValue = (value: string) => {
     const num = Number(value)
     return isNaN(num) ? 0 : num
+}
+
+const getTextShadow = (s: MetricStyle | undefined) => {
+    if (!s?.textShadowEnabled) return undefined
+    return `${s.textShadowX}px ${s.textShadowY}px ${s.textShadowBlur}px ${s.textColor}99`
+}
+
+// Helper at bottom of file — converts emoji char to Twemoji CDN URL
+const emojiToTwemojiUrl = (emoji: string): string => {
+    // Get the codepoint(s), filter out variation selectors (FE0F)
+    const codePoints = [...emoji]
+        .map(c => c.codePointAt(0)!.toString(16))
+        .filter(cp => cp !== 'fe0f')
+        .join('-')
+    return `https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/${codePoints}.svg`
 }

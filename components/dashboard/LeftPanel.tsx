@@ -15,19 +15,20 @@ import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import {
-    Metric, MetricStyle, METRIC_ICONS, MetricIconKey,
-    PLATFORMS, PlatformType, TEMPLATES, DEFAULT_METRIC_STYLE
-} from '@/types/card'
+    Metric, METRIC_ICONS, MetricIconKey,
+    PlatformType, DEFAULT_METRIC_STYLE
+} from '@/types'
 import { QUALITY_LABELS, QualityPreset } from '@/lib/export-service'
-import Product from '../product'
 import MetricTypographyPanel from './MetricTypographyPanel'
+import { PLATFORMS } from '@/constants/platforms'
+import { TEMPLATES } from '@/constants/templates'
 
 interface LeftPanelProps {
     active: string
     setActive: (id: string) => void
 
     progressType: 'circle' | 'bar'
-    setProgressType: (i: 'circle' | 'bar') => void;
+    setProgressType: (i: 'circle' | 'bar') => void
 
     platform: PlatformType | null
     setPlatform: (p: PlatformType) => void
@@ -39,8 +40,11 @@ interface LeftPanelProps {
     handleAddMetric: () => void
     handleRemoveMetric: (i: number) => void
     updateMetric: (i: number, data: Partial<Metric>) => void
+
     selectedEmoji: string | null
-    setSelectedEmoji: (e: string | null) => void
+    selectedEmojiUrl: string | null
+    setSelectedEmoji: (e: string | null, url: string | null) => void
+
     emojiCount: number
     setEmojiCount: (n: number) => void
     quality: QualityPreset
@@ -52,12 +56,11 @@ interface LeftPanelProps {
     onDownload: () => void
     onCopy: () => void
     handleTextColor: string
-    onChangeHandleTextColor: (i: string) => void;
+    onChangeHandleTextColor: (i: string) => void
 }
 
 const QUALITY_KEYS: QualityPreset[] = ['low', 'medium', 'high', '2k', '4k', '6k']
 
-// Main
 export default function LeftPanel({
     active,
     setActive,
@@ -74,6 +77,7 @@ export default function LeftPanel({
     handleRemoveMetric,
     updateMetric,
     selectedEmoji,
+    selectedEmojiUrl,
     setSelectedEmoji,
     emojiCount,
     setEmojiCount,
@@ -91,14 +95,12 @@ export default function LeftPanel({
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [showTypography, setShowTypography] = useState(false)
 
-    // Safe active metric — always has a style fallback
     const rawMetric = metrics[activeMetricIndex]
     const activeMetric: Metric = {
         ...rawMetric,
         style: rawMetric?.style ?? DEFAULT_METRIC_STYLE,
     }
 
-    // Close typography panel when switching metrics
     useEffect(() => {
         setShowTypography(false)
     }, [activeMetricIndex])
@@ -257,12 +259,10 @@ export default function LeftPanel({
                         </button>
                     </div>
 
-                    {/* Metric tabs with delete */}
                     {metrics.length > 1 && (
                         <div className="flex gap-1 flex-wrap">
                             {metrics.map((m, i) => (
                                 <div key={m.id} className="flex items-center">
-                                    {/* Select tab */}
                                     <button
                                         onClick={() => setActiveMetricIndex(i)}
                                         className={cn(
@@ -274,7 +274,6 @@ export default function LeftPanel({
                                     >
                                         {m.label || `Metric ${i + 1}`}
                                     </button>
-                                    {/* Delete tab */}
                                     <button
                                         onClick={() => handleRemoveMetric(i)}
                                         className={cn(
@@ -291,12 +290,9 @@ export default function LeftPanel({
                         </div>
                     )}
 
-                    {/* Input row + Aa */}
                     <div className="space-y-2">
                         <div className="flex items-stretch gap-2">
-                            {/* Main input */}
                             <div className="flex-1 flex items-center bg-[#1a1a1a] border border-white/10 rounded-lg overflow-hidden">
-                                {/* Icon picker */}
                                 <Select
                                     value={activeMetric.icon}
                                     onValueChange={(value) => {
@@ -326,7 +322,6 @@ export default function LeftPanel({
                                     </SelectContent>
                                 </Select>
 
-                                {/* Value */}
                                 <input
                                     type="text"
                                     value={activeMetric.value}
@@ -337,7 +332,6 @@ export default function LeftPanel({
                                     className="w-16 bg-transparent border-r border-white/10 py-2 text-center text-sm focus:outline-none"
                                 />
 
-                                {/* Label */}
                                 <input
                                     value={activeMetric.label}
                                     onChange={(e) => {
@@ -350,7 +344,6 @@ export default function LeftPanel({
                                     placeholder="Followers"
                                 />
 
-                                {/* Remove (single metric) */}
                                 {metrics.length === 1 && (
                                     <button
                                         onClick={() => handleRemoveMetric(activeMetricIndex)}
@@ -361,7 +354,6 @@ export default function LeftPanel({
                                 )}
                             </div>
 
-                            {/* Aa toggle */}
                             <button
                                 onClick={() => setShowTypography(!showTypography)}
                                 title="Typography controls"
@@ -376,7 +368,6 @@ export default function LeftPanel({
                             </button>
                         </div>
 
-                        {/* Inline typography panel */}
                         {showTypography && (
                             <MetricTypographyPanel
                                 style={activeMetric.style}
@@ -401,7 +392,7 @@ export default function LeftPanel({
                         </div>
                         {selectedEmoji && (
                             <button
-                                onClick={() => setSelectedEmoji(null)}
+                                onClick={() => setSelectedEmoji(null, null)}
                                 className="text-white/30 hover:text-white/60 cursor-pointer"
                             >
                                 <X size={14} />
@@ -420,7 +411,15 @@ export default function LeftPanel({
                     >
                         <span className="flex items-center gap-2">
                             {selectedEmoji
-                                ? <><span className="text-xl">{selectedEmoji}</span><span className="text-white/60 text-xs">Selected</span></>
+                                ? (
+                                    <>
+                                        {selectedEmojiUrl
+                                            ? <img src={selectedEmojiUrl} alt={selectedEmoji} className="w-6 h-6 object-contain" />
+                                            : <span className="text-xl">{selectedEmoji}</span>
+                                        }
+                                        <span className="text-white/60 text-xs">Selected</span>
+                                    </>
+                                )
                                 : <span>Choose an emoji</span>
                             }
                         </span>
@@ -431,7 +430,7 @@ export default function LeftPanel({
                         <EmojiPicker
                             theme={Theme.DARK}
                             onEmojiClick={(data: EmojiClickData) => {
-                                setSelectedEmoji(data.emoji)
+                                setSelectedEmoji(data.emoji, data.imageUrl ?? null)
                                 setShowEmojiPicker(false)
                             }}
                             width="100%"
@@ -466,7 +465,6 @@ export default function LeftPanel({
             {/* ── Pinned bottom ── */}
             <div className="shrink-0 p-4 border-t border-white/5 bg-white/5 space-y-3">
 
-                {/* Quality */}
                 <div className="space-y-1.5">
                     <span className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold">Export Quality</span>
                     <div className="w-full grid grid-cols-6 gap-1 bg-white/5 border border-white/10 p-1 rounded-xl mt-1">
@@ -485,7 +483,6 @@ export default function LeftPanel({
                     </div>
                 </div>
 
-                {/* Download */}
                 <Button
                     onClick={onDownload}
                     disabled={downloading}
@@ -497,7 +494,6 @@ export default function LeftPanel({
                     )}
                 </Button>
 
-                {/* Copy */}
                 <Button
                     onClick={onCopy}
                     disabled={copying}

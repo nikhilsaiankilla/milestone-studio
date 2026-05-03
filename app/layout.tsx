@@ -1,30 +1,52 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider } from "next-themes";
-import { Analytics } from "@vercel/analytics/next"
-import { Toaster } from "@/components/ui/sonner"
+import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "@/components/ui/sonner";
 
-import { Inter, Roboto, Playfair_Display, Space_Grotesk, Syne, DM_Sans } from "next/font/google";
+import {
+  Inter,
+  Roboto,
+  Playfair_Display,
+  Space_Grotesk,
+  Syne,
+  DM_Sans,
+} from "next/font/google";
 
-const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"], weight: ["400", "700", "900"] });
-const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: ["latin"], weight: ["400", "700"] });
-const syne = Syne({ variable: "--font-syne", subsets: ["latin"], weight: ["400", "700", "800"] });
-const dmSans = DM_Sans({ variable: "--font-dm-sans", subsets: ["latin"], weight: ["400", "700"] });
-
-const roboto = Roboto({
-  variable: "--font-roboto",
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
+  weight: ["400", "700", "900"],
 });
-
-const inter = Inter({
-  variable: "--font-inter",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-})
+  weight: ["400", "700"],
+});
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+  weight: ["400", "700", "800"],
+});
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+const roboto = Roboto({ variable: "--font-roboto", subsets: ["latin"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+
+const BASE_URL = "https://milestonestudio.nikhilsai.in";
 
 export const metadata: Metadata = {
-  title: "Milestone Studio | Create Beautiful Milestone Cards for Social Media",
+  metadataBase: new URL(BASE_URL),
+
+  title: {
+    default: "Milestone Studio — Beautiful Milestone Cards for Creators & Founders",
+    template: "%s | Milestone Studio",
+  },
+
   description:
-    "Design stunning milestone cards for Twitter, Instagram, LinkedIn, YouTube and more. Customize typography, themes, gradients, aspect ratios, and export high-quality PNGs instantly.",
+    "Turn your growth numbers into shareable milestone cards. Customize gradients, fonts, and layouts — export high-quality PNG for Twitter, LinkedIn, Instagram instantly. Free.",
 
   keywords: [
     "milestone card generator",
@@ -37,43 +59,44 @@ export const metadata: Metadata = {
     "share achievements online",
     "png card generator",
     "growth milestone design",
+    "free milestone card maker",
+    "achievement card generator",
   ],
 
   applicationName: "Milestone Studio",
-
-  authors: [{ name: "Milestone Studio" }],
-  creator: "Milestone Studio",
+  authors: [{ name: "Nikhil Sai", url: "https://nikhilsai.in" }],
+  creator: "Nikhil Sai",
   publisher: "Milestone Studio",
-
-  metadataBase: new URL("https://milestonestudio.nikhilsai.in"),
 
   alternates: {
     canonical: "/",
   },
 
   openGraph: {
-    title: "Milestone Studio",
+    title: "Milestone Studio — Beautiful Milestone Cards",
     description:
-      "Create beautiful milestone cards with gradients, custom fonts, themes, and instant PNG export.",
-    url: "https://milestonestudio.nikhilsai.in",
+      "Create beautiful milestone cards with gradients, custom fonts, themes, and instant PNG export. Free for creators and founders.",
+    url: BASE_URL,
     siteName: "Milestone Studio",
     type: "website",
+    locale: "en_US",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Milestone Studio Preview",
+        alt: "Milestone Studio — Beautiful Milestone Cards for Creators",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Milestone Studio",
+    title: "Milestone Studio — Beautiful Milestone Cards",
     description:
-      "Create beautiful milestone cards for creators, founders, and brands.",
+      "Create beautiful milestone cards for creators, founders, and brands. Free, no login, export up to 6K PNG.",
     images: ["/og-image.png"],
+    creator: "@nikhilbuildss",
   },
 
   robots: {
@@ -89,6 +112,11 @@ export const metadata: Metadata = {
   },
 
   category: "design",
+
+  // Verification (add values when you have them)
+  // verification: {
+  //   google: "your-google-site-verification",
+  // },
 };
 
 export default function RootLayout({
@@ -97,10 +125,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`min-h-screen w-full bg-background text-foreground font-sans antialiased 
           ${roboto.variable} 
@@ -108,8 +133,7 @@ export default function RootLayout({
           ${playfair.variable} 
           ${spaceGrotesk.variable} 
           ${syne.variable} 
-          ${dmSans.variable}`
-        }
+          ${dmSans.variable}`}
         suppressHydrationWarning
       >
         <Toaster />

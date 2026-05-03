@@ -221,3 +221,19 @@
 .animate-glow {
   animation: glow-pulse 3s ease-in-out infinite;
 }
+
+/* globals.css */
+@layer utilities {
+  .bg-diagonal-texture {
+    background-color: #fbfbfb;
+    background-image: linear-gradient(135deg,
+        rgba(0, 170, 69, 0.12) 10%,
+        transparent 10%,
+        transparent 50%,
+        rgba(0, 170, 69, 0.12) 50%,
+        rgba(0, 170, 69, 0.12) 60%,
+        transparent 60%,
+        transparent 100%);
+    background-size: 7px 7px;
+  }
+}

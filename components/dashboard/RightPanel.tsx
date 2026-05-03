@@ -9,10 +9,9 @@ import { AlignCenter, AlignLeft, AlignRight, ShuffleIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { FONTS, GRADIENT_CATEGORIES } from '@/types/card'
 import Product from '../product'
+import { GRADIENT_CATEGORIES } from '@/constants/gradients-bg'
 
 interface RightPanelProps {
     selectedGradient: string
@@ -89,23 +88,35 @@ export default function RightPanel({
                             </div>
 
                             <div className="grid grid-cols-6 gap-2">
-                                {items.map((item, i) => (
-                                    <button
-                                        key={`${category}-${i}`}
-                                        onClick={() => setSelectedGradient(item)}
-                                        className={cn(
-                                            'relative w-full aspect-square rounded-xl border transition-all duration-300 overflow-hidden cursor-pointer group active:scale-95',
-                                            selectedGradient === item
-                                                ? 'border-white/90 ring-4 ring-white/20 z-10 scale-95'
-                                                : 'border-white/10 hover:border-white/40 hover:shadow-lg hover:shadow-black/20'
-                                        )}
-                                        style={{ background: item, backgroundSize: 'cover' }}
-                                        aria-label={`Select ${category} gradient ${i + 1}`}
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent opacity-40" />
-                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
-                                    </button>
-                                ))}
+                                {items.map((item, i) => {
+                                    const isImage = /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(item) || item.startsWith('/')
+
+                                    return (
+                                        <button
+                                            key={`${category}-${i}`}
+                                            onClick={() => setSelectedGradient(item)}
+                                            className={cn(
+                                                'relative w-full aspect-square rounded-xl border transition-all duration-300 overflow-hidden cursor-pointer group active:scale-95',
+                                                selectedGradient === item
+                                                    ? 'border-white/90 ring-4 ring-white/20 z-10 scale-95'
+                                                    : 'border-white/10 hover:border-white/40 hover:shadow-lg hover:shadow-black/20'
+                                            )}
+                                            style={isImage ? {} : { background: item }}
+                                            aria-label={`Select ${category} gradient ${i + 1}`}
+                                        >
+                                            {isImage && (
+                                                <img
+                                                    src={item}
+                                                    alt=""
+                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                    draggable={false}
+                                                />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent opacity-40" />
+                                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </section>
                     ))}
