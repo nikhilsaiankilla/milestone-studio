@@ -31,28 +31,28 @@ const RATIO_PRESETS: {
     h: number
     tags: string[]
 }[] = [
-    {
-        key: 'landscape',
-        label: 'Landscape',
-        ratio: '16:9',
-        w: 48, h: 27,
-        tags: ['Twitter', 'YouTube', 'LinkedIn'],
-    },
-    {
-        key: 'square',
-        label: 'Square',
-        ratio: '1:1',
-        w: 36, h: 36,
-        tags: ['Instagram', 'Threads'],
-    },
-    {
-        key: 'portrait',
-        label: 'Portrait',
-        ratio: '9:16',
-        w: 27, h: 48,
-        tags: ['Story', 'Reels', 'TikTok'],
-    },
-]
+        {
+            key: 'landscape',
+            label: 'Landscape',
+            ratio: '16:9',
+            w: 48, h: 27,
+            tags: ['Twitter', 'YouTube', 'LinkedIn'],
+        },
+        {
+            key: 'square',
+            label: 'Square',
+            ratio: '1:1',
+            w: 36, h: 36,
+            tags: ['Instagram', 'Threads'],
+        },
+        {
+            key: 'portrait',
+            label: 'Portrait',
+            ratio: '9:16',
+            w: 27, h: 48,
+            tags: ['Story', 'Reels', 'TikTok'],
+        },
+    ]
 
 export default function RightPanel({
     selectedGradient, setSelectedGradient,
@@ -70,7 +70,93 @@ export default function RightPanel({
             {/* Scrollable area */}
             <div className="flex-1 w-full overflow-y-auto p-4 space-y-5 custom-scroll">
                 <Product />
+                {/* <div
+                    style={{
+                        fontFamily:
+                            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                        border: "1px solid rgb(224, 224, 224)",
+                        borderRadius: "12px",
+                        padding: "20px",
+                        maxWidth: "500px",
+                        background: "rgb(255, 255, 255)",
+                        boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            marginBottom: "12px",
+                        }}
+                    >
+                        <img
+                            alt="Milestone Studio"
+                            src="https://ph-files.imgix.net/62049eeb-7320-4819-b46f-0940305924b5.png?auto=format&fit=crop&w=80&h=80"
+                            style={{
+                                width: "64px",
+                                height: "64px",
+                                borderRadius: "8px",
+                                objectFit: "cover",
+                                flexShrink: 0,
+                            }}
+                        />
 
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <h3
+                                style={{
+                                    margin: 0,
+                                    fontSize: "18px",
+                                    fontWeight: 600,
+                                    color: "rgb(26, 26, 26)",
+                                    lineHeight: 1.3,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                Milestone Studio
+                            </h3>
+
+                            <p
+                                style={{
+                                    margin: "4px 0 0",
+                                    fontSize: "14px",
+                                    color: "rgb(102, 102, 102)",
+                                    lineHeight: 1.4,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                }}
+                            >
+                                Generate Visually stunning Milestone cards within seconds!
+                            </p>
+                        </div>
+                    </div>
+
+                    <a
+                        href="https://www.producthunt.com/products/milestone-studio?embed=true&utm_source=embed&utm_medium=post_embed"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            marginTop: "12px",
+                            padding: "8px 16px",
+                            background: "rgb(255, 97, 84)",
+                            color: "#fff",
+                            textDecoration: "none",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                        }}
+                    >
+                        Check it out on Product Hunt →
+                    </a>
+                </div> */}
                 <Separator className="opacity-50" />
 
                 {/* Noise */}
@@ -196,89 +282,89 @@ export default function RightPanel({
                             </button>
                         </PopoverTrigger>
                         <PopoverContent
-    side="top"
-    align="center"
-    className="w-[300px] p-4 bg-card border border-white/10 rounded-2xl shadow-2xl"
->
-    <p className="text-[10px] uppercase tracking-[0.2em] opacity-30 font-bold mb-4">
-        Select Canvas Size
-    </p>
+                            side="top"
+                            align="center"
+                            className="w-[300px] p-4 bg-card border border-white/10 rounded-2xl shadow-2xl"
+                        >
+                            <p className="text-[10px] uppercase tracking-[0.2em] opacity-30 font-bold mb-4">
+                                Select Canvas Size
+                            </p>
 
-    <div className="flex flex-col gap-2">
-        {RATIO_PRESETS.map((preset) => {
-            const isSelected = ratio === preset.key
-            return (
-                <button
-                    key={preset.key}
-                    onClick={() => {
-                        setRatio(preset.key)
-                        setRatioOpen(false)
-                    }}
-                    className={cn(
-                        'flex items-center gap-4 w-full px-3 py-3 rounded-xl border transition-all cursor-pointer text-left',
-                        isSelected
-                            ? 'border-primary bg-yellow-500/8 text-white'
-                            : 'border-white/8 bg-white/[0.02] text-white/60 hover:text-white hover:border-white/15 hover:bg-white/5'
-                    )}
-                >
-                    {/* Shape preview — fixed width container so shapes align */}
-                    <div className="flex items-center justify-center shrink-0 w-12 h-12">
-                        <div
-                            className={cn(
-                                'rounded-[3px] border-2 transition-all',
-                                isSelected ? 'border-primary bg-primary/10' : 'border-white/25'
-                            )}
-                            style={{
-                                width: `${preset.w}px`,
-                                height: `${preset.h}px`,
-                            }}
-                        />
-                    </div>
+                            <div className="flex flex-col gap-2">
+                                {RATIO_PRESETS.map((preset) => {
+                                    const isSelected = ratio === preset.key
+                                    return (
+                                        <button
+                                            key={preset.key}
+                                            onClick={() => {
+                                                setRatio(preset.key)
+                                                setRatioOpen(false)
+                                            }}
+                                            className={cn(
+                                                'flex items-center gap-4 w-full px-3 py-3 rounded-xl border transition-all cursor-pointer text-left',
+                                                isSelected
+                                                    ? 'border-primary bg-yellow-500/8 text-white'
+                                                    : 'border-white/8 bg-white/[0.02] text-white/60 hover:text-white hover:border-white/15 hover:bg-white/5'
+                                            )}
+                                        >
+                                            {/* Shape preview — fixed width container so shapes align */}
+                                            <div className="flex items-center justify-center shrink-0 w-12 h-12">
+                                                <div
+                                                    className={cn(
+                                                        'rounded-[3px] border-2 transition-all',
+                                                        isSelected ? 'border-primary bg-primary/10' : 'border-white/25'
+                                                    )}
+                                                    style={{
+                                                        width: `${preset.w}px`,
+                                                        height: `${preset.h}px`,
+                                                    }}
+                                                />
+                                            </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1.5">
-                            <span className={cn(
-                                'text-[13px] font-semibold',
-                                isSelected ? 'text-white' : 'text-white/70'
-                            )}>
-                                {preset.label}
-                            </span>
-                            <span className={cn(
-                                'text-[11px] font-mono',
-                                isSelected ? 'text-primary' : 'text-white/30'
-                            )}>
-                                {preset.ratio}
-                            </span>
-                        </div>
+                                            {/* Info */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className={cn(
+                                                        'text-[13px] font-semibold',
+                                                        isSelected ? 'text-white' : 'text-white/70'
+                                                    )}>
+                                                        {preset.label}
+                                                    </span>
+                                                    <span className={cn(
+                                                        'text-[11px] font-mono',
+                                                        isSelected ? 'text-primary' : 'text-white/30'
+                                                    )}>
+                                                        {preset.ratio}
+                                                    </span>
+                                                </div>
 
-                        {/* Tags in a row */}
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                            {preset.tags.map(tag => (
-                                <span
-                                    key={tag}
-                                    className={cn(
-                                        'text-[10px] px-2 py-0.5 rounded-full font-medium transition-all',
-                                        isSelected
-                                            ? 'bg-primary/15 text-primary/80'
-                                            : 'bg-white/5 text-white/25'
-                                    )}
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
+                                                {/* Tags in a row */}
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    {preset.tags.map(tag => (
+                                                        <span
+                                                            key={tag}
+                                                            className={cn(
+                                                                'text-[10px] px-2 py-0.5 rounded-full font-medium transition-all',
+                                                                isSelected
+                                                                    ? 'bg-primary/15 text-primary/80'
+                                                                    : 'bg-white/5 text-white/25'
+                                                            )}
+                                                        >
+                                                            {tag}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
 
-                    {/* Selected indicator */}
-                    {isSelected && (
-                        <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-primary" />
-                    )}
-                </button>
-            )
-        })}
-    </div>
-</PopoverContent>
+                                            {/* Selected indicator */}
+                                            {isSelected && (
+                                                <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-primary" />
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </PopoverContent>
                     </Popover>
                 </div>
 
