@@ -68,7 +68,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
         <div
             ref={ref}
             className={cn(
-                'w-full overflow-hidden flex p-8 relative',
+                'w-full overflow-hidden flex items-center p-8 relative',
                 ratioClass,
                 alignmentClass
             )}
@@ -168,24 +168,43 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                         {metrics.map((m, idx) => {
                             const Icon = METRIC_ICONS[m.icon as MetricIconKey] || Users
                             const s = m.style
+                            const isHero = s?.iconPosition === 'hero'
 
                             return (
                                 <div key={m.id} className="flex items-center gap-8">
-                                    {/* Divider between metrics */}
                                     {idx > 0 && (
-                                        <div className="w-px h-12 opacity-20" style={{ backgroundColor: s?.textColor || '#ffffff' }} />
+                                        <div className="w-px h-12 opacity-20"
+                                            style={{ backgroundColor: s?.textColor || '#ffffff' }} />
                                     )}
                                     <div
                                         className="flex flex-col"
                                         style={{
                                             color: s?.textColor,
-                                            alignItems: alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center'
+                                            alignItems: alignment === 'left' ? 'flex-start'
+                                                : alignment === 'right' ? 'flex-end'
+                                                    : 'center'
                                         }}
                                     >
-                                        {/* Icon + Value */}
+                                        {/* Hero icon — big, above number */}
+                                        {s?.showIcon && isHero && (
+                                            <Icon
+                                                size={s?.iconSize * 1.2}
+                                                strokeWidth={1.5}
+                                                style={{
+                                                    opacity: 0.9,
+                                                    marginBottom: `${s?.valueSize * 0.2}px`,
+                                                }}
+                                            />
+                                        )}
+
+                                        {/* Value row — inline icon only when not hero */}
                                         <div className="flex items-center gap-2 tracking-tight leading-none">
-                                            {s?.showIcon && (
-                                                <Icon size={s?.iconSize * 0.6} strokeWidth={s?.valueBold ? 2.5 : 1.5} style={{ opacity: 0.7 }} />
+                                            {s?.showIcon && !isHero && (
+                                                <Icon
+                                                    size={s?.iconSize * 0.6}
+                                                    strokeWidth={s?.valueBold ? 2.5 : 1.5}
+                                                    style={{ opacity: 0.7 }}
+                                                />
                                             )}
                                             <span style={{
                                                 fontSize: `${s?.valueSize}px`,
@@ -195,10 +214,11 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                                                 textShadow: getTextShadow(s),
                                                 lineHeight: 1,
                                             }}>
-                                                {formatNumber(m.value)}
+                                                {s.numberFormat !== 'full' ? formatNumber(m.value) : m.value}
                                             </span>
                                         </div>
-                                        {/* Label on top */}
+
+                                        {/* Label */}
                                         <div style={{
                                             fontSize: `${s?.labelSize}px`,
                                             fontWeight: s?.labelBold ? 700 : 600,
@@ -208,12 +228,11 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                                             opacity: 0.5,
                                             fontFamily: s?.fontFamily,
                                             textShadow: getTextShadow(s),
-                                            marginBottom: '6px',
+                                            marginTop: '6px',
                                             textAlign: 'center'
                                         }}>
                                             {m.label}
                                         </div>
-
                                     </div>
                                 </div>
                             )
@@ -228,108 +247,194 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                 const { past1, past2, future1, future2 } = getMilestones(value);
                 const s = metric.style;
 
+                // central config (DO NOT randomize these)
+                const STEP_Z = 60;
+                const STEP_ROTATE = 18;
+                const SCALE_FACTOR = 0.18;
+
                 const base = {
                     fontStyle: s?.valueItalic ? 'italic' : 'normal',
                     fontFamily: s?.fontFamily,
-                    transition: 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
                     color: s?.textColor || '#ffffff',
-                    userSelect: 'none' as const,
-                    pointerEvents: 'none' as const,
                     lineHeight: 1,
-                    display: 'block',
+                    userSelect: 'none' as const,
                 };
+
+                const Icon = METRIC_ICONS[metric.icon as MetricIconKey] || Users
 
                 return (
                     <div
                         className="relative z-10 flex flex-col items-center justify-center"
-                        style={{ perspective: '800px', gap: '2px' }}
+                        style={{
+                            perspective: '1200px',
+                            transformStyle: 'preserve-3d',
+                        }}
                     >
-                        {/* Future 2 — farthest away */}
-                        <div style={{
-                            ...base,
-                            fontSize: `${s?.valueSize * 0.52}px`,
-                            fontWeight: 200,
-                            letterSpacing: '3px',
-                            opacity: 0.08,
-                            filter: 'blur(1.8px)',
-                            transform: 'rotateX(-38deg) translateY(4px) translateZ(-60px) scale(0.78)',
-                            marginBottom: '2px',
-                        }}>
-                            {formatNumber(future2)}
-                        </div>
 
-                        {/* Future 1 */}
-                        <div style={{
-                            ...base,
-                            fontSize: `${s?.valueSize * 0.68}px`,
-                            fontWeight: s?.valueBold ? 300 : 200,
-                            letterSpacing: '5px',
-                            opacity: 0.22,
-                            filter: 'blur(0.9px)',
-                            transform: 'rotateX(-22deg) translateY(2px) translateZ(-30px) scale(0.88)',
-                            marginBottom: '6px',
-                        }}>
-                            {formatNumber(future1)}
-                        </div>
-
-                        {/* Current — hero */}
-                        <div className="flex flex-col items-center z-20" style={{ marginBottom: '6px' }}>
-                            <div style={{
+                        {/* FUTURE 2 (top far) */}
+                        <div
+                            style={{
                                 ...base,
-                                fontSize: `${s?.valueSize}px`,
-                                fontWeight: s?.valueBold ? 900 : 500,
-                                letterSpacing: '8px',
-                                opacity: 1,
-                                filter: 'none',
+                                fontSize: `${s?.valueSize * (1 - 2 * SCALE_FACTOR)}px`,
+                                fontWeight: 300,
+                                letterSpacing: '3px',
+
+                                opacity: 0.14,
+                                filter: 'blur(2.4px)',
+
+                                transform: `
+                        rotateX(${-STEP_ROTATE * 2}deg)
+                        translateZ(${-STEP_Z}px)
+                        scale(${1 - 2 * SCALE_FACTOR})
+                    `,
+                                transformOrigin: 'center',
+                                transition: 'all 0.6s cubic-bezier(0.22,1,0.36,1)',
+                            }}
+                        >
+                            {s.numberFormat !== 'full' ? formatNumber(future2) : future2}
+                        </div>
+
+
+                        {/* FUTURE 1 */}
+                        <div
+                            style={{
+                                ...base,
+                                fontSize: `${s?.valueSize * (1 - SCALE_FACTOR)}px`,
+                                fontWeight: 300,
+                                letterSpacing: '3px',
+
+                                opacity: 0.28,
+                                filter: 'blur(1.2px)',
+
+                                transform: `
+                        rotateX(${-STEP_ROTATE}deg)
+                        translateZ(${-STEP_Z}px)
+                        scale(${1 - SCALE_FACTOR})
+                    `,
+                                transformOrigin: 'center',
+                                transition: 'all 0.6s cubic-bezier(0.22,1,0.36,1)',
+                            }}
+                        >
+                            {s.numberFormat !== 'full' ? formatNumber(future1) : future1}
+                        </div>
+
+
+                        {/* CURRENT (hero) */}
+                        <div
+                            className="flex flex-col items-center"
+                            style={{
                                 transform: 'translateZ(0)',
-                                textShadow: `0 0 40px ${s?.textColor || '#ffffff'}55, 0 2px 8px rgba(0,0,0,0.4)`,
-                                pointerEvents: 'auto',
-                                userSelect: 'text',
-                            }}>
-                                {formatNumber(value)}
+                                zIndex: 10,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    ...base,
+                                    fontSize: `${s?.valueSize}px`,
+                                    fontWeight: s?.valueBold ? 900 : 600,
+                                    letterSpacing: '6px',
+
+                                    opacity: 1,
+                                    filter: 'none',
+
+                                    textShadow: `0 0 35px ${s?.textColor || '#ffffff'}33`,
+                                    userSelect: 'text',
+                                    pointerEvents: 'auto',
+                                }}
+                            >
+                                {s.numberFormat !== 'full'
+                                    ? formatNumber(value)
+                                    : value}
                             </div>
-                            <div style={{
-                                fontSize: `${s?.labelSize}px`,
-                                fontWeight: s?.labelBold ? 700 : 500,
-                                fontStyle: s?.labelItalic ? 'italic' : 'normal',
-                                fontFamily: s?.fontFamily,
-                                color: s?.textColor || '#ffffff',
-                                opacity: 0.45,
-                                letterSpacing: '0.35em',
-                                textTransform: 'uppercase',
-                                marginTop: '10px',
-                            }}>
+
+                            {/* label */}
+                            <div
+                                style={{
+                                    marginTop: '14px',
+                                    fontSize: `${s?.labelSize}px`,
+                                    fontWeight: s?.labelBold ? 700 : 500,
+                                    fontStyle: s?.labelItalic ? 'italic' : 'normal',
+                                    fontFamily: s?.fontFamily,
+                                    color: s?.textColor || '#ffffff',
+                                    opacity: 0.45,
+                                    letterSpacing: '0.35em',
+                                    textTransform: 'uppercase',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
+                                }}
+                            >
+                                {s?.showIcon && (
+                                    <Icon
+                                        size={s?.iconSize * 0.2}
+                                        strokeWidth={s?.valueBold ? 2.5 : 1.5}
+                                        style={{ opacity: 0.7 }}
+                                    />
+                                )}
                                 {metric?.label}
                             </div>
                         </div>
 
-                        {/* Past 1 */}
-                        <div style={{
-                            ...base,
-                            fontSize: `${s?.valueSize * 0.68}px`,
-                            fontWeight: s?.valueBold ? 300 : 200,
-                            letterSpacing: '5px',
-                            opacity: 0.22,
-                            filter: 'blur(0.9px)',
-                            transform: 'rotateX(22deg) translateY(-2px) translateZ(-30px) scale(0.88)',
-                            marginTop: '2px',
-                        }}>
-                            {formatNumber(past1)}
+
+                        {/* PAST 1 */}
+                        <div
+                            style={{
+                                ...base,
+                                fontSize: `${s?.valueSize * (1 - SCALE_FACTOR)}px`,
+                                fontWeight: 300,
+                                letterSpacing: '3px',
+
+                                opacity: 0.28,
+                                filter: 'blur(1.2px)',
+
+                                transform: `
+                        rotateX(${STEP_ROTATE}deg)
+                        translateZ(${-STEP_Z}px)
+                        scale(${1 - SCALE_FACTOR})
+                    `,
+                                transformOrigin: 'center',
+                                transition: 'all 0.6s cubic-bezier(0.22,1,0.36,1)',
+                            }}
+                        >
+                            {s.numberFormat !== 'full' ? formatNumber(past1) : past1}
                         </div>
 
-                        {/* Past 2 — farthest away */}
-                        <div style={{
-                            ...base,
-                            fontSize: `${s?.valueSize * 0.52}px`,
-                            fontWeight: 200,
-                            letterSpacing: '3px',
-                            opacity: 0.08,
-                            filter: 'blur(1.8px)',
-                            transform: 'rotateX(38deg) translateY(-4px) translateZ(-60px) scale(0.78)',
-                            marginTop: '2px',
-                        }}>
-                            {formatNumber(past2)}
+
+                        {/* PAST 2 (bottom far) */}
+                        <div
+                            style={{
+                                ...base,
+                                fontSize: `${s?.valueSize * (1 - 2 * SCALE_FACTOR)}px`,
+                                fontWeight: 300,
+                                letterSpacing: '3px',
+
+                                opacity: 0.14,
+                                filter: 'blur(2.4px)',
+
+                                transform: `
+                        rotateX(${STEP_ROTATE * 2}deg)
+                        translateZ(${-STEP_Z}px)
+                        scale(${1 - 2 * SCALE_FACTOR})
+                    `,
+                                transformOrigin: 'center',
+                                transition: 'all 0.6s cubic-bezier(0.22,1,0.36,1)',
+                            }}
+                        >
+                            {s.numberFormat !== 'full' ? formatNumber(past2) : past2}
                         </div>
+
+
+                        {/* gradient mask (MANDATORY for realism) */}
+                        <div
+                            className="pointer-events-none absolute inset-0"
+                            style={{
+                                maskImage:
+                                    'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+                                WebkitMaskImage:
+                                    'linear-gradient(to bottom, transparent, black 20%, black 80%, transparent)',
+                            }}
+                        />
+
                     </div>
                 );
             })()}
@@ -379,7 +484,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                                             fontSize: `${(s?.valueSize || 40) * 0.8}px`,
                                             fontWeight: s?.valueBold ? 800 : 400,
                                         }}>
-                                            {formatNumber(currentVal)}
+                                            {s.numberFormat !== 'full' ? formatNumber(currentVal) : currentVal}
                                         </span>
                                     </div>
 
@@ -408,9 +513,9 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                                 <div className="w-full flex justify-between mt-3 px-1 text-[10px] uppercase tracking-widest opacity-50 font-bold" style={typographyBase}>
                                     <span>0</span>
                                     {targetMetric ? (
-                                        <span>Goal: {formatNumber(targetVal)} {targetMetric.label}</span>
+                                        <span>Goal: {s.numberFormat !== 'full' ? formatNumber(targetVal) : targetVal} {targetMetric.label}</span>
                                     ) : (
-                                        <span>Target: {formatNumber(targetVal)}</span>
+                                        <span>Target: {s.numberFormat !== 'full' ? formatNumber(targetVal) : targetVal}</span>
                                     )}
                                 </div>
                             </div>
@@ -466,7 +571,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                                         className="mt-2 text-[10px] opacity-40 font-bold tracking-widest"
                                         style={{ fontFamily: s?.fontFamily }}
                                     >
-                                        {formatNumber(currentVal)} / {formatNumber(targetVal)}
+                                        {s.numberFormat !== 'full' ? formatNumber(currentVal) : currentVal} / {s.numberFormat !== 'full' ? formatNumber(targetVal) : targetVal}
                                     </div>
                                 </div>
 
@@ -545,7 +650,7 @@ const CardCanvas = forwardRef<HTMLDivElement, CardCanvasProps>(({
                                         lineHeight: 1,
                                         display: 'block',
                                     }}>
-                                        {formatNumber(m.value)}
+                                        {s.numberFormat !== 'full' ? formatNumber(m.value) : m.value}
                                     </span>
                                 </div>
                             </div>

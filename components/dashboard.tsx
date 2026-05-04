@@ -88,16 +88,30 @@ const Dashboard = () => {
     const emojiPositions = useMemo(() => {
         if (!selectedEmoji) return []
 
-        // depth: 1 = closest/front, 0 = farthest/back
         const slots = [
-            { x: 5, y: 30, rotation: -15, depth: 1.0 },  // far left middle — hero
-            { x: 72, y: 4, rotation: 20, depth: 0.85 },  // top right — large
-            { x: 78, y: 68, rotation: -10, depth: 0.70 },  // bottom right — mid
-            { x: 55, y: 15, rotation: 25, depth: 0.35 },  // top center — small
-            { x: 62, y: 55, rotation: 10, depth: 0.25 },  // center right — tiny
-            { x: 20, y: 72, rotation: -20, depth: 0.40 },  // bottom left — small
-            { x: 40, y: 8, rotation: 15, depth: 0.20 },  // top center-left — tiny
-            { x: 85, y: 40, rotation: -5, depth: 0.30 },  // right middle — small
+            // Hero — far left middle, large, sharp, slight upward-left tilt
+            { x: 6, y: 38, rotation: -20, depth: 1.0 },
+
+            // Top right — large, sharp, tilted right-upward
+            { x: 74, y: 5, rotation: 18, depth: 0.88 },
+
+            // Bottom right — mid size, slight tilt
+            { x: 80, y: 72, rotation: -8, depth: 0.60 },
+
+            // Center — small, behind the milestone numbers, faded
+            { x: 52, y: 28, rotation: 22, depth: 0.28 },
+
+            // Bottom center-right — small, below 2050
+            { x: 60, y: 68, rotation: 12, depth: 0.32 },
+
+            // Bottom left — small, below hero
+            { x: 14, y: 75, rotation: -18, depth: 0.38 },
+
+            // Top center — tiny, above 1900
+            { x: 38, y: 6, rotation: 14, depth: 0.18 },
+
+            // Right edge mid — small
+            { x: 88, y: 42, rotation: -6, depth: 0.25 },
         ]
 
         return slots.slice(0, emojiCount).map((s, i) => {

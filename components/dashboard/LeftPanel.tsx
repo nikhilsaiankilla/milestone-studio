@@ -7,7 +7,7 @@
  */
 
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ChevronDown, IdCard, Layout, Plus, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -101,10 +101,6 @@ export default function LeftPanel({
         style: rawMetric?.style ?? DEFAULT_METRIC_STYLE,
     }
 
-    useEffect(() => {
-        setShowTypography(false)
-    }, [activeMetricIndex])
-
     const inferIconFromLabel = (label: string): MetricIconKey => {
         const l = label.toLowerCase()
         if (l.includes('follower') || l.includes('user')) return 'users'
@@ -162,7 +158,10 @@ export default function LeftPanel({
                     </div>
                     <div className="flex gap-2 flex-wrap">
                         {PLATFORMS.map((p) => {
-                            const isActive = platform?.value === p.value
+                            const isActive = platform?.value === p.value;
+                            // Assign the function to a Capitalized variable
+                            const Icon = p.icon;
+
                             return (
                                 <button
                                     key={p.value}
@@ -174,9 +173,11 @@ export default function LeftPanel({
                                             : 'border-white/10 text-white/70 hover:bg-white/5 hover:text-white'
                                     )}
                                 >
-                                    <span className={isActive ? 'text-black' : 'text-white/60'}>{p.icon}</span>
+                                    <span className={isActive ? 'text-black' : 'text-white/60'}>
+                                        {Icon}
+                                    </span>
                                 </button>
-                            )
+                            );
                         })}
                     </div>
                     <div className="space-y-2">
@@ -301,10 +302,7 @@ export default function LeftPanel({
                                 >
                                     <SelectTrigger className="w-14 h-full bg-transparent rounded-none border-0 border-r border-white/10 px-2 focus:ring-0 focus:ring-offset-0">
                                         <SelectValue>
-                                            {(() => {
-                                                const Icon = METRIC_ICONS[activeMetric.icon as MetricIconKey]
-                                                return Icon ? <Icon size={16} /> : null
-                                            })()}
+                                            {METRIC_ICONS[activeMetric.icon as MetricIconKey] ?? null}
                                         </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent className="p-2">

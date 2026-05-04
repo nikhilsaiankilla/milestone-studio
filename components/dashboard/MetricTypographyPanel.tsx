@@ -18,8 +18,18 @@ const FONT_SIZES = {
 }
 
 const PRESET_COLORS = [
-    '#ffffff', '#000000', '#facc15', '#34d399',
-    '#60a5fa', '#f87171', '#e879f9', '#fb923c',
+    // Neutrals
+    '#ffffff', '#e2e8f0', '#94a3b8', '#334155', '#0f172a', '#000000',
+    // Warm
+    '#fef08a', '#facc15', '#fb923c', '#f87171', '#f43f5e', '#fb7185',
+    // Cool
+    '#34d399', '#2dd4bf', '#22d3ee', '#60a5fa', '#818cf8', '#a78bfa',
+    // Vivid / noise-gradient friendly
+    '#e879f9', '#c084fc', '#f0abfc', '#38bdf8', '#4ade80', '#86efac',
+    // Deep / moody
+    '#7c3aed', '#4f46e5', '#0ea5e9', '#059669', '#dc2626', '#9f1239',
+    // Muted / dusty
+    '#a16207', '#92400e', '#1e3a5f', '#1a2e1a', '#2d1b69', '#1c1917',
 ]
 
 function ColorPicker({
@@ -179,6 +189,70 @@ function StyleRow({
 export default function MetricTypographyPanel({ style, onChange }: Props) {
     return (
         <div className="mt-2 px-3 py-3 rounded-xl border border-white/10 bg-white/[0.02] space-y-4">
+            {/* Icon Position toggle — only show when icon is enabled */}
+            {style.showIcon && (
+                <div className="w-full flex items-center justify-between">
+                    <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Icon Position</span>
+                    <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-0.5 rounded-lg">
+                        <button
+                            onClick={() => onChange({ iconPosition: 'inline' })}
+                            className={cn(
+                                'px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                                style.iconPosition === 'inline'
+                                    ? 'bg-primary/20 border border-primary/40 text-primary'
+                                    : 'text-white/30 hover:text-white/60'
+                            )}
+                        >
+                            Inline
+                        </button>
+                        <button
+                            onClick={() => onChange({ iconPosition: 'hero' })}
+                            className={cn(
+                                'px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                                style.iconPosition === 'hero'
+                                    ? 'bg-primary/20 border border-primary/40 text-primary'
+                                    : 'text-white/30 hover:text-white/60'
+                            )}
+                        >
+                            Hero
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {(
+                <div className="w-full flex items-center justify-between">
+                    <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">
+                        Number Format
+                    </span>
+
+                    <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-0.5 rounded-lg">
+                        <button
+                            onClick={() => onChange({ numberFormat: 'full' })}
+                            className={cn(
+                                'px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                                style.numberFormat === 'full'
+                                    ? 'bg-primary/20 border border-primary/40 text-primary'
+                                    : 'text-white/30 hover:text-white/60'
+                            )}
+                        >
+                            EX: 3000
+                        </button>
+
+                        <button
+                            onClick={() => onChange({ numberFormat: 'compact' })}
+                            className={cn(
+                                'px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer',
+                                style.numberFormat === 'compact'
+                                    ? 'bg-primary/20 border border-primary/40 text-primary'
+                                    : 'text-white/30 hover:text-white/60'
+                            )}
+                        >
+                            EX: 3K
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-2">
                 <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Text Color</span>
