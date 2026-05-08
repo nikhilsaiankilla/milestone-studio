@@ -13,6 +13,9 @@ import { DEFAULT_METRIC_STYLE } from '@/types'
 import { PLATFORMS } from "@/constants/platforms"
 import { GRADIENT_CATEGORIES } from "@/constants/gradients-bg"
 
+import TrustMRRCardCanvas from '@/components/trustmrr/TrustMRRCardCanvas'
+import { type TrustMRRStartup, type TrustMRRCardTemplate, type TrustMRRStyle, DEFAULT_TRUSTMRR_STYLE } from '@/types/trustmrr'
+
 const Dashboard = () => {
 
     const [stars, setStars] = useState<number | null>(null)
@@ -78,6 +81,14 @@ const Dashboard = () => {
     const [selectedEmoji, setSelectedEmojiChar] = useState<string | null>(null)
     const [selectedEmojiUrl, setSelectedEmojiUrl] = useState<string | null>(null)
     const [emojiCount, setEmojiCount] = useState(6)
+
+    const [trustMRRData, setTrustMRRData] = useState<TrustMRRStartup | null>(null)
+    const [trustMRRTemplate, setTrustMRRTemplate] = useState<TrustMRRCardTemplate | null>(null)
+    const [trustMRRStyle, setTrustMRRStyle] = useState<TrustMRRStyle>(DEFAULT_TRUSTMRR_STYLE)
+
+    const updateTrustMRRStyle = (partial: Partial<TrustMRRStyle>) =>
+        setTrustMRRStyle(prev => ({ ...prev, ...partial }))
+
 
     // Single setter passed to LeftPanel — keeps char + url in sync always
     const handleEmojiSelect = (emoji: string | null, url: string | null) => {
@@ -245,11 +256,18 @@ const Dashboard = () => {
                     quality={quality} setQuality={setQuality}
                     downloading={downloading} copying={copying}
                     downloadProgress={downloadProgress} copyProgress={copyProgress}
+                    style={trustMRRStyle}
+                    onStyleChange={updateTrustMRRStyle}
                     onDownload={async () => {
                         await handleDownload(cardRef.current)
                         triggerCheck()
                     }}
                     onCopy={() => handleCopy(cardRef.current)}
+
+                    trustMRRData={trustMRRData}
+                    onTrustMRRDataFetched={setTrustMRRData}
+                    trustMRRTemplate={trustMRRTemplate}
+                    onTrustMRRTemplateSelect={setTrustMRRTemplate}
                 />
 
                 <div
@@ -261,23 +279,37 @@ const Dashboard = () => {
                     }}
                 >
                     <div className="w-full max-w-2xl! flex flex-col gap-2 mx-auto">
-                        <CardCanvas
-                            ref={cardRef}
-                            active={active}
-                            progressType={progressType}
-                            metrics={metrics}
-                            selectedGradient={selectedGradient}
-                            alignment={alignment}
-                            ratio={ratio}
-                            noiseEnabled={noiseEnabled}
-                            selectedEmoji={selectedEmoji}
-                            selectedEmojiUrl={selectedEmojiUrl}
-                            emojiPositions={emojiPositions}
-                            handle={handle}
-                            handleTextColor={handleTextColor}
-                            platform={platform}
-                            borderRadius={borderRadius}
-                        />
+                        {active === 'trustmrr' && trustMRRData && trustMRRTemplate ? (
+                            <TrustMRRCardCanvas
+                                ref={cardRef}
+                                data={trustMRRData}
+                                template={trustMRRTemplate}
+                                selectedGradient={selectedGradient}
+                                alignment={alignment}
+                                ratio={ratio}
+                                noiseEnabled={noiseEnabled}
+                                style={trustMRRStyle}
+                                borderRadius={borderRadius}
+                            />
+                        ) : (
+                            <CardCanvas
+                                ref={cardRef}
+                                active={active}
+                                progressType={progressType}
+                                metrics={metrics}
+                                selectedGradient={selectedGradient}
+                                alignment={alignment}
+                                ratio={ratio}
+                                noiseEnabled={noiseEnabled}
+                                selectedEmoji={selectedEmoji}
+                                selectedEmojiUrl={selectedEmojiUrl}
+                                emojiPositions={emojiPositions}
+                                handle={handle}
+                                handleTextColor={handleTextColor}
+                                platform={platform}
+                                borderRadius={borderRadius}
+                            />
+                        )}
                     </div>
                 </div>
 

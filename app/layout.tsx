@@ -122,7 +122,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`min-h-screen w-full bg-background text-foreground font-sans antialiased 
+        className={`min-h-screen w-full text-foreground font-sans antialiased bg-black
           ${roboto.variable} 
           ${inter.variable} 
           ${playfair.variable} 
