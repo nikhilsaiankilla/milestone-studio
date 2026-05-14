@@ -6,11 +6,23 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        userAgent: "Googlebot",
+        allow: "/",
+        crawlDelay: 0,
+      },
+      {
+        userAgent: "Bingbot",
+        allow: "/",
+        crawlDelay: 1,
+      },
+      {
         userAgent: "*",
         allow: "/",
-        disallow: ["/editor"], // no value indexing the editor tool UI
+        disallow: ["/api/", "/private/"],
+        crawlDelay: 1,
       },
     ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: [`${BASE_URL}/sitemap.xml`],
+    host: BASE_URL,
   };
 }

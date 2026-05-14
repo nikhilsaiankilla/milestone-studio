@@ -133,7 +133,7 @@ export default function LeftPanel({
     }
 
     return (
-        <div className="bg-card w-[360px] border-r-2 border-white/10 flex flex-col h-full">
+        <div className="bg-card w-full md:w-[360px] border-r-2 border-white/10 flex flex-col h-full">
 
             {/* ── Scrollable ── */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scroll">
@@ -158,17 +158,14 @@ export default function LeftPanel({
                             value={'trustmrr'}
                             className={'cursor-pointer'}
                         >
-                            <div className='w-full flex items-center justify-between'>
-                                <div className="flex items-center gap-2">
-                                    <img
-                                        src="https://trustmrr.com/favicon.ico"
-                                        alt="TrustMRR"
-                                        className="w-4 h-4 rounded"
-                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                                    />
-                                    <span className="text-xs font-bold">TrustMRR</span>
-                                </div>
-                                <CheckCircle2 size={6} className='text-green-600' />
+                            <div className="flex items-center gap-2">
+                                <img
+                                    src="https://trustmrr.com/favicon.ico"
+                                    alt="TrustMRR"
+                                    className="w-4 h-4 rounded"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                />
+                                <span className="text-xs font-bold">TrustMRR</span>
                             </div>
                         </TabsTrigger>
                     </TabsList>
@@ -202,6 +199,35 @@ export default function LeftPanel({
                                         </div>
                                     ))}
                                 </div>
+                                <Separator className={cn("opacity-50 mt-4", active !== 'progress' && "hidden")} />
+                                {active === 'progress' && (
+                                    <section className="animate-in fade-in slide-in-from-top-2 duration-300 mt-4">
+                                        <div className="w-full flex items-center gap-2 mb-4">
+                                            <Layout size={18} />
+                                            <h2 className="text-sm font-semibold text-secondary-foreground">Progress Style</h2>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
+                                            <button
+                                                onClick={() => setProgressType('bar')}
+                                                className={cn(
+                                                    "py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
+                                                    progressType === 'bar' ? "bg-primary text-black" : "text-white/40 hover:text-white/60"
+                                                )}
+                                            >
+                                                Linear Bar
+                                            </button>
+                                            <button
+                                                onClick={() => setProgressType('circle')}
+                                                className={cn(
+                                                    "py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
+                                                    progressType === 'circle' ? "bg-primary text-black" : "text-white/40 hover:text-white/60"
+                                                )}
+                                            >
+                                                Circle
+                                            </button>
+                                        </div>
+                                    </section>
+                                )}
                             </section>
                             <Separator className="opacity-50" />
 
@@ -267,37 +293,6 @@ export default function LeftPanel({
                                     </div>
                                 </div>
                             </section>
-
-                            {active === 'progress' && (
-                                <section className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="w-full flex items-center gap-2 mb-4">
-                                        <Layout size={18} />
-                                        <h2 className="text-sm font-semibold text-secondary-foreground">Progress Style</h2>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 bg-[#1a1a1a] p-1 rounded-xl border border-white/10">
-                                        <button
-                                            onClick={() => setProgressType('bar')}
-                                            className={cn(
-                                                "py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
-                                                progressType === 'bar' ? "bg-primary text-black" : "text-white/40 hover:text-white/60"
-                                            )}
-                                        >
-                                            Linear Bar
-                                        </button>
-                                        <button
-                                            onClick={() => setProgressType('circle')}
-                                            className={cn(
-                                                "py-2 text-xs font-bold rounded-lg transition-all cursor-pointer",
-                                                progressType === 'circle' ? "bg-primary text-black" : "text-white/40 hover:text-white/60"
-                                            )}
-                                        >
-                                            Circle
-                                        </button>
-                                    </div>
-                                </section>
-                            )}
-
-                            <Separator className={cn("opacity-50", active !== 'progress' && "hidden")} />
 
                             <Separator className="opacity-50" />
 

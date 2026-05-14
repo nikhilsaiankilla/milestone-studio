@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "Turn your growth numbers into shareable milestone cards. Customize gradients, fonts, and layouts — export high-quality PNG for Twitter, LinkedIn, Instagram instantly. Free.",
+    "Turn your growth numbers into shareable milestone cards. Customize gradients, fonts, and layouts — export high-quality PNG for Twitter, LinkedIn, Instagram instantly. Free milestone card maker for creators, founders, and entrepreneurs.",
 
   keywords: [
     "milestone card generator",
@@ -61,9 +61,18 @@ export const metadata: Metadata = {
     "growth milestone design",
     "free milestone card maker",
     "achievement card generator",
+    "MRR milestone card",
+    "revenue milestone design",
+    "startup growth tracker",
+    "business milestone design",
+    "achievement graphics maker",
+    "custom milestone template",
+    "social proof graphics",
+    "growth metric designer",
   ],
 
   applicationName: "Milestone Studio",
+  category: "productivity",
   authors: [{ name: "Nikhil Sai", url: "https://nikhilsai.in" }],
   creator: "Nikhil Sai",
   publisher: "Milestone Studio",
@@ -73,9 +82,9 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "Milestone Studio — Beautiful Milestone Cards",
+    title: "Milestone Studio — Beautiful Milestone Cards for Growth Tracking",
     description:
-      "Create beautiful milestone cards with gradients, custom fonts, themes, and instant PNG export. Free for creators and founders.",
+      "Create stunning milestone cards with custom gradients, fonts, themes, and instant PNG export. Free for creators, founders, and entrepreneurs. No login required.",
     url: BASE_URL,
     siteName: "Milestone Studio",
     type: "website",
@@ -85,20 +94,21 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Milestone Studio — Beautiful Milestone Cards for Creators",
+        alt: "Milestone Studio — Beautiful Milestone Cards for Creators and Founders",
+        type: "image/png",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Milestone Studio — Beautiful Milestone Cards",
+    title: "Milestone Studio — Create Beautiful Achievement Cards",
     description:
-      "Create beautiful milestone cards for creators, founders, and brands. Free, no login, export up to 6K PNG.",
+      "Free milestone card maker for creators, founders, and brands. Design achievement graphics with custom gradients and export 6K PNG instantly.",
     images: ["/og-image.png"],
     creator: "@itzznikhilsai",
+    site: "@itzznikhilsai",
   },
-
   robots: {
     index: true,
     follow: true,
@@ -107,11 +117,9 @@ export const metadata: Metadata = {
       follow: true,
       "max-image-preview": "large",
       "max-snippet": -1,
-      "max-video-preview": -1,
+      "max-video-preview": -1
     },
   },
-
-  category: "design",
 };
 
 export default function RootLayout({
@@ -119,8 +127,46 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Milestone Studio",
+    description:
+      "Create beautiful milestone cards with custom gradients, fonts, and themes. Free PNG export for creators and founders.",
+    url: BASE_URL,
+    applicationCategory: "DesignApplication",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    author: {
+      "@type": "Person",
+      name: "Nikhil Sai",
+      url: "https://nikhilsai.in",
+    },
+    creator: {
+      "@type": "Person",
+      name: "Nikhil Sai",
+    },
+    image: "/og-image.png",
+    screenshot: "/og-image.png",
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="Milestone Studio" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body
         className={`min-h-screen w-full text-foreground font-sans antialiased bg-black
           ${roboto.variable} 

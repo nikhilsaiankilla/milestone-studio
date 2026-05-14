@@ -66,7 +66,7 @@ export default function RightPanel({
     const currentRatio = RATIO_PRESETS.find(r => r.key === ratio)!
 
     return (
-        <div className="bg-card w-[360px] shrink-0 border-l-2 border-white/10 flex flex-col h-full">
+        <div className="bg-card w-full md:w-[360px] shrink-0 border-l-2 border-white/10 flex flex-col h-full">
             {/* Scrollable area */}
             <div className="flex-1 w-full overflow-y-auto p-4 space-y-5 custom-scroll">
                 <Product />

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 export default function FoundersNote() {
     return (
@@ -23,20 +24,32 @@ export default function FoundersNote() {
                             Every time I wanted to celebrate a project milestone on X or LinkedIn, I found myself wrestling with design tools just to make a simple card look professional.
                         </p>
                         <p>
-                            I wanted something that didn&apos;t require a login, didn&apos;t have a learning curve, and produced premium results in seconds. Milestone Studio is a tool-first platform—no fluff, just utility for builders and creators.
+                            I wanted something that didn&apos;t require a login, didn&apos;t have a learning curve, and produced premium results in seconds. Milestone Studio is a tool-first platform no fluff, just utility for builders and creators.
                         </p>
                     </div>
                 </div>
 
                 {/* Founder Signature Area */}
                 <div className="mt-12 pt-8 border-t border-white/5 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-lg font-bold">
-                        N
-                    </div>
-                    <div>
-                        <div className="text-sm font-semibold">Nikhil Sai</div>
-                        <div className="text-xs text-white/30 tracking-wide uppercase">Software Engineer</div>
-                    </div>
+                    <Link
+                        href={'https://nikhilsai.in'}
+                        target="_blank"
+                        className="mt-12 pt-8 border-t border-white/5 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0">
+                            <Image
+                                alt="Nikhil Sai"
+                                src="/nikhil.jpeg"
+                                width={48}
+                                height={48}
+                                unoptimized
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div>
+                            <div className="text-sm font-semibold">Nikhil Sai</div>
+                            <div className="text-xs text-white/30 tracking-wide uppercase">Software Engineer</div>
+                        </div>
+                    </Link>
                 </div>
             </div>
         </section>

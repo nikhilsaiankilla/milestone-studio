@@ -11,13 +11,13 @@ const DashboardNav = ({ stars }: { stars: number | null }) => {
                 <div className="relative overflow-hidden rounded-lg group-hover:scale-110 transition-transform duration-200">
                     <Image src="/logo.png" alt="Milestone Studio Logo" width={32} height={32} className="object-contain" />
                 </div>
-                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 leading-none">
+                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 leading-none hidden md:block">
                     Milestore Studio
                 </h1>
             </Link>
 
-            <div className="flex items-center justify-center gap-3">
-                <p className="text-xs text-muted-foreground">
+            <div className="items-center justify-center gap-1 md:gap-3 flex">
+                <p className="text-xs text-muted-foreground hidden md:block">
                     <KbdGroup>
                         <Kbd>Ctrl + Z</Kbd><span>Undo</span>
                         <span className="mx-1">•</span>
@@ -31,9 +31,9 @@ const DashboardNav = ({ stars }: { stars: number | null }) => {
                             <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
                             <path d="M9 18c-4.51 2-5-2-7-2" />
                         </svg>
-                        <span>GitHub</span>
+                        <span className='hidden md:block'>GitHub</span>
                         {stars !== null && (
-                            <span className="ml-1 flex items-center gap-1 border-l pl-2 border-border text-muted-foreground">
+                            <span className="ml-1 items-center gap-1 border-l pl-2 border-border text-muted-foreground hidden md:flex">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-500">
                                     <path d="M12 1.7L14.6 9h7.7l-6.2 4.5 2.4 7.3L12 16.3l-6.5 4.5 2.4-7.3L1.7 9h7.7L12 1.7z" />
                                 </svg>
@@ -46,7 +46,8 @@ const DashboardNav = ({ stars }: { stars: number | null }) => {
                 <Link href="https://www.buymeacoffee.com/nikhilsaiankilla" target="_blank">
                     <Button className="flex items-center gap-2 px-4 py-2 cursor-pointer" variant="outline">
                         <Image src="/buymeacoffee.png" alt="Buy Me a Coffee" width={18} height={18} />
-                        <span>Buy me a coffee</span>
+                        <span className='hidden md:block'>Buy me a coffee</span>
+                        <span className='md:hidden block'>coffee</span>
                     </Button>
                 </Link>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef } from 'react'
+import { forwardRef, useRef, useEffect, useState } from 'react'
 import { TrendingUp, Users, DollarSign, Eye, Trophy, Tag, BarChart2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TrustMRRStartup, TrustMRRCardTemplate, TrustMRRStyle } from '@/types/trustmrr'
@@ -17,6 +17,9 @@ interface TrustMRRCardCanvasProps {
     borderRadius: number
 }
 
+// The card is always rendered at this internal width — download quality is always crisp
+const CARD_BASE_WIDTH = 800
+
 const TrustMRRCardCanvas = forwardRef<HTMLDivElement, TrustMRRCardCanvasProps>(({
     data,
     template,
@@ -27,84 +30,123 @@ const TrustMRRCardCanvas = forwardRef<HTMLDivElement, TrustMRRCardCanvasProps>((
     noiseEnabled,
     borderRadius,
 }, ref) => {
-    const ratioClass =
-        ratio === 'landscape' ? 'aspect-[16/9]' :
-            ratio === 'portrait' ? 'aspect-[9/16]' :
-                'aspect-square'
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const [scale, setScale] = useState(1)
+
+    // Measure wrapper and compute scale so card fits perfectly
+    useEffect(() => {
+        const update = () => {
+            if (!wrapperRef.current) return
+            const available = wrapperRef.current.getBoundingClientRect().width
+            setScale(available / CARD_BASE_WIDTH)
+        }
+        update()
+        const ro = new ResizeObserver(update)
+        if (wrapperRef.current) ro.observe(wrapperRef.current)
+        return () => ro.disconnect()
+    }, [])
+
+    const aspectRatio =
+        ratio === 'landscape' ? 16 / 9 :
+            ratio === 'portrait' ? 9 / 16 :
+                1
+
+    // Wrapper height keeps the space reserved so layout doesn't collapse
+    const scaledHeight = (CARD_BASE_WIDTH / aspectRatio) * scale
+
+    const isImageBg = /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(selectedGradient) || selectedGradient.startsWith('/')
 
     const alignClass =
         alignment === 'left' ? 'items-center justify-start text-left' :
             alignment === 'right' ? 'items-center justify-end text-right' :
                 'items-center justify-center text-center'
 
-    const isImageBg = /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(selectedGradient) || selectedGradient.startsWith('/')
-
     return (
-        <div
-            ref={ref}
-            className={cn('w-full overflow-hidden flex relative p-8', ratioClass, alignClass)}
-            style={{ borderRadius }}
-        >
-            {/* Background */}
-            {isImageBg ? (
-                <img src={selectedGradient} alt="" className="absolute inset-0 w-full h-full object-cover pointer-events-none" style={{ borderRadius }} />
-            ) : (
-                <div className="absolute inset-0 pointer-events-none" style={{ background: selectedGradient, borderRadius }} />
-            )}
+        // Outer wrapper: fills available width, reserves the right height
+        <div ref={wrapperRef} className="w-full" style={{ height: scaledHeight }}>
+            {/*
+                Inner card: always CARD_BASE_WIDTH wide, scaled down via transform.
+                transform-origin top-left so it anchors correctly.
+                The `ref` forwarded here is what html-to-image / dom-to-image targets —
+                it captures the card at full CARD_BASE_WIDTH resolution regardless of scale.
+            */}
+            <div
+                ref={ref}
+                className={cn('overflow-hidden flex relative p-8', alignClass)}
+                style={{
+                    width: CARD_BASE_WIDTH,
+                    height: CARD_BASE_WIDTH / aspectRatio,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    borderRadius,
+                }}
+            >
+                {/* Background */}
+                {isImageBg ? (
+                    <img
+                        src={selectedGradient}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        style={{ borderRadius }}
+                    />
+                ) : (
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{ background: selectedGradient, borderRadius }}
+                    />
+                )}
 
-            {/* Noise */}
-            {noiseEnabled && (
-                <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg"
-                    style={{ opacity: 0.18, borderRadius }}>
-                    <filter id="tmrr-noise">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" />
-                        <feColorMatrix type="saturate" values="0" />
-                    </filter>
-                    <rect width="100%" height="100%" filter="url(#tmrr-noise)" />
-                </svg>
-            )}
-
-            {/* Watermark */}
-            <p className="absolute z-20 left-4 bottom-3 text-[9px] font-semibold uppercase tracking-widest pointer-events-none"
-                style={{ opacity: 0.25, color: style.textColor, letterSpacing: '0.12em', fontFamily: style.fontFamily }}>
-                Verified · TrustMRR
-            </p>
-
-            {/* Handle */}
-            {data.xHandle && (
-                <p className="absolute right-6 bottom-5 z-10 font-semibold text-sm flex items-center gap-1"
-                    style={{ color: style.textColor, fontFamily: style.fontFamily }}>
+                {/* Noise */}
+                {noiseEnabled && (
                     <svg
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        width={14}
-                        height={14}
-                        style={
-                            {
-                                color: style.textColor
-                            }
-                        }
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ opacity: 0.18, borderRadius }}
                     >
-                        <path d="M18.244 2H21l-6.56 7.5L22 22h-6.828l-5.35-6.993L3.5 22H1l7.02-8.02L2 2h6.828l4.84 6.33L18.244 2Zm-2.394 18h1.885L8.16 4H6.155l9.695 16Z" />
+                        <filter id="tmrr-noise">
+                            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch" />
+                            <feColorMatrix type="saturate" values="0" />
+                        </filter>
+                        <rect width="100%" height="100%" filter="url(#tmrr-noise)" />
                     </svg>
-                    {data.xHandle}
+                )}
+
+                {/* Watermark */}
+                <p
+                    className="absolute z-20 left-4 bottom-3 text-[9px] font-semibold uppercase tracking-widest pointer-events-none"
+                    style={{ opacity: 0.25, color: style.textColor, letterSpacing: '0.12em', fontFamily: style.fontFamily }}
+                >
+                    Verified · TrustMRR
                 </p>
-            )}
 
-            {/* Startup icon */}
-            {data?.icon && (
-                <img
-                    src={data?.icon}
-                    alt={data?.name}
-                    className="absolute top-5 right-6 z-10 rounded-lg object-contain"
-                    style={{ width: 32, height: 32, opacity: 0.85 }}
-                    crossOrigin="anonymous"
-                />
-            )}
+                {/* Handle */}
+                {data.xHandle && (
+                    <p
+                        className="absolute right-6 bottom-5 z-10 font-semibold text-sm flex items-center gap-1"
+                        style={{ color: style.textColor, fontFamily: style.fontFamily }}
+                    >
+                        <svg viewBox="0 0 24 24" fill="currentColor" width={14} height={14} style={{ color: style.textColor }}>
+                            <path d="M18.244 2H21l-6.56 7.5L22 22h-6.828l-5.35-6.993L3.5 22H1l7.02-8.02L2 2h6.828l4.84 6.33L18.244 2Zm-2.394 18h1.885L8.16 4H6.155l9.695 16Z" />
+                        </svg>
+                        {data.xHandle}
+                    </p>
+                )}
 
-            {/* Card content */}
-            <div className="relative z-10 w-full">
-                <CardContent data={data} template={template} style={style} alignment={alignment} />
+                {/* Startup icon */}
+                {data?.icon && (
+                    <img
+                        src={data?.icon}
+                        alt={data?.name}
+                        className="absolute top-5 right-6 z-10 rounded-lg object-contain"
+                        style={{ width: 32, height: 32, opacity: 0.85 }}
+                        crossOrigin="anonymous"
+                    />
+                )}
+
+                {/* Card content */}
+                <div className="relative z-10 w-full">
+                    <CardContent data={data} template={template} style={style} alignment={alignment} />
+                </div>
             </div>
         </div>
     )
@@ -113,7 +155,8 @@ const TrustMRRCardCanvas = forwardRef<HTMLDivElement, TrustMRRCardCanvasProps>((
 TrustMRRCardCanvas.displayName = 'TrustMRRCardCanvas'
 export default TrustMRRCardCanvas
 
-// Card content
+// ─── Card content ─────────────────────────────────────────────────────────────
+
 interface ContentProps {
     data: TrustMRRStartup
     template: TrustMRRCardTemplate
@@ -183,7 +226,6 @@ function CardContent({ data, template, style, alignment }: ContentProps) {
     )
 
     switch (template) {
-
         case 'mrr':
             return (
                 <div className={cn('flex flex-col gap-2', alignItems)}>
